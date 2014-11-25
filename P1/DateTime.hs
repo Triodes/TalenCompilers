@@ -2,11 +2,9 @@
 -- Aron List 3896536
 
 import ParseLib.Abstract as PL
-import Text.Regex
 import Data.Maybe
 
 -- Starting Framework
-
 
 -- | "Target" datatype for the DateTime parser, i.e, the parser should produce elements of this type.
 data DateTime = DateTime { date :: Date
@@ -143,6 +141,9 @@ checkTime (Time h m s) = h < Hour 24
                       && m < Minute 60
                       && s < Second 60
 
+{- 
+-- Alternative approach using Text.Regex
+
 -- Runs the date and time regexes over their respective tuple parts
 regDateTime :: (String,String) -> Bool
 regDateTime (x,y) = regDate x && regTime y
@@ -156,13 +157,13 @@ evalRegex x y = case matchRegex y x of
     Just _  -> True
     Nothing -> False
 
-
 -- Regex validating a time
 regexTime = mkRegex "^(([0-1]{1}[0-9]{1})|(2[0-3]{1}))([0-5]{1}[0-9]{1}){2}$"
 
 -- Regex validating a date
 regexDate = mkRegex "^((1[6789]|[2-9][0-9])[0-9]{2}(0[13578]|1[02])(0[1-9]|[12][0-9]|3[01]))$|^((1[6789]|[2-9][0-9])[0-9]{2}(0[469]|11)(0[1-9]|[12][0-9]|30))$|^((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])02(0[1-9]|1[0-9]|2[0-9])$|^(1[6789]|[2-9][0-9])[0-9]{2}02(0[1-9]|1[0-9]|2[0-8])$"
 
+-}
 
 checkDate :: Date -> Bool
 checkDate (Date y m d) = checkYear y && checkMonth m && checkDay
