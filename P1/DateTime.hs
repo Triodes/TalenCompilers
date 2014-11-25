@@ -171,10 +171,10 @@ data Calendar = Calendar { prodid  :: String
                          , version :: String
                          , events  :: [Event] }
 
-data Event = Event { uid     :: String
-                   , dtstamp :: DateTime
-                   , dtstart :: DateTime
-                   , dtend   :: DateTime
+data Event = Event { uid         :: String
+                   , dtstamp     :: DateTime
+                   , dtstart     :: DateTime
+                   , dtend       :: DateTime
                    , description :: Maybe String
                    , summary     :: Maybe String
                    , location    :: Maybe String }
