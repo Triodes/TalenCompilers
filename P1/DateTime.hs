@@ -135,17 +135,15 @@ checkDateTime :: DateTime -> Bool
 checkDateTime = regDateTime . splitDateTime
 
 regDateTime :: (String,String) -> Bool
-regDateTime (x,y) = (regDate x) && (regTime y)
+regDateTime (x,y) = regDate x && regTime y
+    where
+        regDate x = evalRegex x regexDate
+        regTime x = evalRegex x regexTime
 
 evalRegex :: String -> Regex -> Bool
 evalRegex x y = case matchRegex y x of
-    Just _ -> True
+    Just _  -> True
     Nothing -> False
-
-regDate :: String -> Bool
-regDate x = evalRegex x regexDate
-
-regTime x = evalRegex x regexTime
 
 regexTime = mkRegex "^(([0-1]{1}[0-9]{1})|(2[0-3]{1}))([0-5]{1}[0-9]{1}){2}$"
 
