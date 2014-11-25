@@ -53,9 +53,12 @@ main = interact (printOutput . processCheck . processInput)
 
 
 -- Exercise 1
+
+-- PARSERS
 parseDateTime :: Parser Char DateTime
 parseDateTime = DateTime <$> parseDate <* symbol 'T' <*> parseTime <*> parseUTC
 
+-- Date
 parseDate :: Parser Char Date
 parseDate = Date <$> parseYear <*> parseMonth <*> parseDay
 
@@ -68,6 +71,7 @@ parseMonth = Month <$> parseNInteger 2
 parseDay :: Parser Char Day
 parseDay = Day <$> parseNInteger 2
 
+-- Time
 parseTime :: Parser Char Time
 parseTime = Time <$> parseHour <*> parseMinute <*> parseSecond
 
@@ -92,6 +96,7 @@ parseUTC = const True  <$> symbol 'Z'
        <|> const False <$> epsilon
 
 -- Exercise 2
+-- Discards results that didn't parse completely
 run :: Parser a b -> [a] -> Maybe b
 run p l = case success of
     [] -> Nothing
@@ -112,22 +117,23 @@ printDateTime dt = show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2
         d = date dt
         t = time dt
         z = if utc dt then "Z" else ""
-        show2 i = replicate (2 - length s) '0' ++ s
-            where s = show i
-        show4 i = replicate (4 - length s) '0' ++ s
-            where s = show i
 
+-- Enhanced 'show' functions pad integers with zeros to 2 or 4 places
+show2 :: Int -> String
+show2 i = replicate (2 - length s) '0' ++ s
+    where s = show i
+show4 :: Int -> String
+show4 i = replicate (4 - length s) '0' ++ s
+    where s = show i
+
+-- Alternative printer for use by the regexes
+-- Returns time and date in a tuple, without 'T' or 'Z'
 splitDateTime :: DateTime -> (String,String)
 splitDateTime dt = (show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
     , show2 (unHour $ hour t) ++ show2 (unMinute $ minute t) ++ show2 (unSecond $ second t) )
     where
         d = date dt
         t = time dt
-        z = if utc dt then "Z" else ""
-        show2 i = replicate (2 - length s) '0' ++ s
-            where s = show i
-        show4 i = replicate (4 - length s) '0' ++ s
-            where s = show i
 
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
