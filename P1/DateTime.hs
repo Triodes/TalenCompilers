@@ -102,6 +102,8 @@ run p l = case success of
         isParsed (_, _ ) = False
 
 -- Exercise 3
+
+-- transforms a datetime into a string
 printDateTime :: DateTime -> String
 printDateTime dt = show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
     ++ "T" ++ show2 (unHour $ hour t) ++ show2 (unMinute $ minute t) ++ show2 (unSecond $ second t)
@@ -131,22 +133,30 @@ splitDateTime dt = (show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
+
+-- checks if the specified datetime comfirms to the datetime specification
 checkDateTime :: DateTime -> Bool
 checkDateTime = regDateTime . splitDateTime
 
+
+-- runs the date and time regexes over their respective tuple parts
 regDateTime :: (String,String) -> Bool
 regDateTime (x,y) = regDate x && regTime y
     where
         regDate x = evalRegex x regexDate
         regTime x = evalRegex x regexTime
 
+-- evaluates a regex to true and false instead of a Maybe
 evalRegex :: String -> Regex -> Bool
 evalRegex x y = case matchRegex y x of
     Just _  -> True
     Nothing -> False
 
+
+--regex validating a time
 regexTime = mkRegex "^(([0-1]{1}[0-9]{1})|(2[0-3]{1}))([0-5]{1}[0-9]{1}){2}$"
 
+-- regex validating a date
 regexDate = mkRegex "^((1[6789]|[2-9][0-9])[0-9]{2}(0[13578]|1[02])(0[1-9]|[12][0-9]|3[01]))$|^((1[6789]|[2-9][0-9])[0-9]{2}(0[469]|11)(0[1-9]|[12][0-9]|30))$|^((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])02(0[1-9]|1[0-9]|2[0-9])$|^(1[6789]|[2-9][0-9])[0-9]{2}02(0[1-9]|1[0-9]|2[0-8])$"
 
 
