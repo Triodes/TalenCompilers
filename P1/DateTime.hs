@@ -3,6 +3,7 @@
 
 import ParseLib.Abstract as PL
 import Text.Regex
+import Data.Maybe
 
 -- Starting Framework
 
@@ -167,12 +168,14 @@ checkDate :: Date -> Bool
 checkDate (Date y m d) = checkYear y && checkMonth m && checkDay
     where
         checkDay = case m of
-            Month 2  -> if (mod (unYear y) 4 == 0 && mod (unYear y) 100 /= 0) then d <= Day 29 else d <= Day 28
+            Month 2  -> if isLeap then d <= Day 29 else d <= Day 28
             Month 4  -> d <= Day 30
             Month 6  -> d <= Day 30
             Month 9  -> d <= Day 30
             Month 11 -> d <= Day 30
             Month _  -> d <= Day 31
+        isLeap = mod iy 400 == 0 || (mod iy 4 == 0 && mod iy 100 /= 0)
+        iy = unYear y
 
 checkYear :: Year -> Bool
 checkYear x = x >= Year 0 && x <= Year 9999
