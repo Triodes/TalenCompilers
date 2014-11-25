@@ -1,5 +1,5 @@
 import ParseLib.Abstract as PL
-
+import Text.Regex.PCRE
 
 -- Starting Framework
 
@@ -100,8 +100,8 @@ run p l = case success of
 
 -- Exercise 3
 printDateTime :: DateTime -> String
-printDateTime dt = show4 (unYear (year d)) ++ show2 (unMonth (month d)) ++ show2 (unDay (day d))
-    ++ "T" ++ show2 (unHour (hour t)) ++ show2 (unMinute (minute t)) ++ show2 (unSecond (second t))
+printDateTime dt = show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
+    ++ "T" ++ show2 (unHour $ hour t) ++ show2 (unMinute $ minute t) ++ show2 (unSecond $ second t)
     ++ z
     where
         d = date dt
@@ -113,8 +113,8 @@ printDateTime dt = show4 (unYear (year d)) ++ show2 (unMonth (month d)) ++ show2
             where s = show i
 
 splitDateTime :: DateTime -> (String,String)
-splitDateTime dt = (show4 (unYear (year d)) ++ show2 (unMonth (month d)) ++ show2 (unDay (day d))
-    , show2 (unHour (hour t)) ++ show2 (unMinute (minute t)) ++ show2 (unSecond (second t)) )
+splitDateTime dt = (show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
+    , show2 (unHour $ hour t) ++ show2 (unMinute $ minute t) ++ show2 (unSecond $ second t) )
     where
         d = date dt
         t = time dt
@@ -126,9 +126,6 @@ splitDateTime dt = (show4 (unYear (year d)) ++ show2 (unMonth (month d)) ++ show
 
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
-
-
-
 
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
