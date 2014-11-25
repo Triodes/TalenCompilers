@@ -1,5 +1,5 @@
 import ParseLib.Abstract as PL
-import Text.Regex.PCRE
+import Text.Regex
 
 -- Starting Framework
 
@@ -129,8 +129,24 @@ parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
-checkDateTime = undefined
+checkDateTime = regDateTime . splitDateTime
 
+regDateTime :: (String,String) -> Bool
+regDateTime (x,y) = (regDate x) && (regTime y)
+
+evalRegex :: String -> Regex -> Bool
+evalRegex x y = case matchRegex y x of
+    Just _ -> True
+    Nothing -> False
+
+regDate :: String -> Bool
+regDate x = evalRegex x regexDate
+
+regTime x = evalRegex x regexTime
+
+regexTime = mkRegex "^(([0-1]{1}[0-9]{1})|(2[0-3]{1}))([0-5]{1}[0-9]{1}){2}$"
+
+regexDate = mkRegex "^((1[6789]|[2-9][0-9])[0-9]{2}(0[13578]|1[02])(0[1-9]|[12][0-9]|3[01]))$|^((1[6789]|[2-9][0-9])[0-9]{2}(0[469]|11)(0[1-9]|[12][0-9]|30))$|^((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])02(0[1-9]|1[0-9]|2[0-9])$|^(1[6789]|[2-9][0-9])[0-9]{2}02(0[1-9]|1[0-9]|2[0-8])$"
 
 
 -- Exercise 6
