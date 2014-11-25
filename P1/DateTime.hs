@@ -159,4 +159,14 @@ regexDate = mkRegex "^((1[6789]|[2-9][0-9])[0-9]{2}(0[13578]|1[02])(0[1-9]|[12][
 
 
 -- Exercise 6
+data Calendar = Calendar { prodid  :: String
+                         , version :: String
+                         , events  :: [Event] }
 
+data Event = Event { uid     :: String
+                   , dtstamp :: DateTime
+                   , dtstart :: DateTime
+                   , dtend   :: DateTime
+                   , description :: Maybe String
+                   , summary     :: Maybe String
+                   , location    :: Maybe String }
