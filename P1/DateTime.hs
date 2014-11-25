@@ -83,12 +83,10 @@ parseMinute = Minute <$> parseNInteger 2
 parseSecond :: Parser Char Second
 parseSecond = Second <$> parseNInteger 2
 
--- Slightly modified versions of 'integer' and 'natural'
+-- Slightly modified version of 'natural'
 -- Uses 'sequence' over a replicated list instead of 'many'
 parseNInteger :: Int -> Parser Char Int
-parseNInteger n = (const negate <$> symbol '-') `option` id <*> naturalN n
-    where
-        naturalN n = foldl (\ a b -> a * 10 + b) 0 <$> PL.sequence (replicate n newdigit)
+parseNInteger n = foldl (\ a b -> a * 10 + b) 0 <$> PL.sequence (replicate n newdigit)
 
 parseUTC :: Parser Char Bool
 parseUTC = const True  <$> symbol 'Z'
