@@ -78,10 +78,12 @@ parseMinute = Minute <$> parseNInteger 2
 parseSecond :: Parser Char Second
 parseSecond = Second <$> parseNInteger 2
 
+-- Slightly modified versions of 'integer' and 'natural'
+-- Uses 'sequence' over a replicated list instead of 'many'
 parseNInteger :: Int -> Parser Char Int
-parseNInteger n = (const negate <$> (symbol '-')) `option` id <*> (naturalN n)
+parseNInteger n = (const negate <$> symbol '-') `option` id <*> naturalN n
     where
-        naturalN n = foldl (\ a b -> a * 10 + b) 0 <$> (PL.sequence (replicate n newdigit))
+        naturalN n = foldl (\ a b -> a * 10 + b) 0 <$> PL.sequence (replicate n newdigit)
 
 parseUTC :: Parser Char Bool
 parseUTC = const True  <$> symbol 'Z'
@@ -97,12 +99,31 @@ run p l = case success of
         isParsed (_, []) = True
         isParsed (_, _ ) = False
 
-
 -- Exercise 3
 printDateTime :: DateTime -> String
-printDateTime x = undefined
+printDateTime dt = show4 (unYear (year d)) ++ show2 (unMonth (month d)) ++ show2 (unDay (day d))
+    ++ "T" ++ show2 (unHour (hour t)) ++ show2 (unMinute (minute t)) ++ show2 (unSecond (second t))
+    ++ z
+    where
+        d = date dt
+        t = time dt
+        z = if utc dt then "Z" else ""
+        show2 i = replicate (2 - length s) '0' ++ s
+            where s = show i
+        show4 i = replicate (4 - length s) '0' ++ s
+            where s = show i
 
-
+splitDateTime :: DateTime -> (String,String)
+splitDateTime dt = (show4 (unYear (year d)) ++ show2 (unMonth (month d)) ++ show2 (unDay (day d))
+    , show2 (unHour (hour t)) ++ show2 (unMinute (minute t)) ++ show2 (unSecond (second t)) )
+    where
+        d = date dt
+        t = time dt
+        z = if utc dt then "Z" else ""
+        show2 i = replicate (2 - length s) '0' ++ s
+            where s = show i
+        show4 i = replicate (4 - length s) '0' ++ s
+            where s = show i
 
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
@@ -112,7 +133,7 @@ parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
-checkDateTime = undefined
+checkDateTime = regDateTime . splitDateTime
 
 regDateTime :: (String,String) -> Bool
 regDateTime (x,y) = (regDate x) && (regTime y)
