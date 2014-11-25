@@ -110,13 +110,9 @@ run p l = case success of
 
 -- Transforms a datetime into a string
 printDateTime :: DateTime -> String
-printDateTime dt = show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
+printDateTime (DateTime d t u) = show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
     ++ "T" ++ show2 (unHour $ hour t) ++ show2 (unMinute $ minute t) ++ show2 (unSecond $ second t)
-    ++ z
-    where
-        d = date dt
-        t = time dt
-        z = if utc dt then "Z" else ""
+    ++ if u then "Z" else ""
 
 -- Enhanced 'show' functions pad integers with zeros to 2 or 4 places
 show2 :: Int -> String
@@ -129,11 +125,8 @@ show4 i = replicate (4 - length s) '0' ++ s
 -- Alternative printer for use by the regexes
 -- Returns time and date in a tuple, without 'T' or 'Z'
 splitDateTime :: DateTime -> (String,String)
-splitDateTime dt = (show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
+splitDateTime (DateTime d t _) = (show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
     , show2 (unHour $ hour t) ++ show2 (unMinute $ minute t) ++ show2 (unSecond $ second t) )
-    where
-        d = date dt
-        t = time dt
 
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
@@ -142,8 +135,12 @@ parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Checks if the specified datetime comfirms to the datetime specification
 checkDateTime :: DateTime -> Bool
-checkDateTime = regDateTime . splitDateTime
+checkDateTime (DateTime d t _) = checkDate d && checkTime t
 
+checkTime :: Time -> Bool
+checkTime (Time h m s) = h < Hour 24
+                      && m < Minute 60
+                      && s < Second 60
 
 -- Runs the date and time regexes over their respective tuple parts
 regDateTime :: (String,String) -> Bool
