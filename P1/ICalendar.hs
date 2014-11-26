@@ -113,9 +113,6 @@ parseUTC = True  <$ symbol 'Z'
 parseCalendar :: Parser Char Calendar
 parseCalendar = undefined
 
-parseDTSTAMP :: Parser Char DateTime
-parseDTSTAMP = token "DTSTAMP:" *> parseDateTime
-
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
 readCalendar = undefined
