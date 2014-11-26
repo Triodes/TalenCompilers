@@ -190,8 +190,8 @@ data Calendar = Calendar { prodid  :: String
                          , events  :: [Event] }
 
 -- Maybe represents optional properties
-data Event = Event { uid         :: String
-                   , dtstamp     :: DateTime
+data Event = Event { dtstamp     :: DateTime
+                   , uid         :: String
                    , dtstart     :: DateTime
                    , dtend       :: DateTime
                    , description :: Maybe String
