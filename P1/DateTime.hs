@@ -89,8 +89,8 @@ parseNInteger :: Int -> Parser Char Int
 parseNInteger n = foldl (\ a b -> a * 10 + b) 0 <$> PL.sequence (replicate n newdigit)
 
 parseUTC :: Parser Char Bool
-parseUTC = const True  <$> symbol 'Z'
-       <|> const False <$> epsilon
+parseUTC = True  <$ symbol 'Z'
+       <|> False <$ epsilon
 
 -- Exercise 2
 -- Discards results that didn't parse completely
@@ -190,8 +190,8 @@ data Calendar = Calendar { prodid  :: String
                          , events  :: [Event] }
 
 -- Maybe represents optional properties
-data Event = Event { uid         :: String
-                   , dtstamp     :: DateTime
+data Event = Event { dtstamp     :: DateTime
+                   , uid         :: String
                    , dtstart     :: DateTime
                    , dtend       :: DateTime
                    , description :: Maybe String
