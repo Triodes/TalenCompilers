@@ -94,14 +94,17 @@ parseUTC = True  <$ symbol 'Z'
 
 -- Exercise 2
 -- Discards results that didn't parse completely
+--run :: Parser a b -> [a] -> Maybe b
+--run p l = case success of
+--    [] -> Nothing
+--    [(a,b)] -> Just a
+--    where
+--        success = filter isParsed (parse p l)
+--        isParsed (_, []) = True
+--        isParsed (_, _ ) = False
+
 run :: Parser a b -> [a] -> Maybe b
-run p l = case success of
-    [] -> Nothing
-    [(a,b)] -> Just a
-    where
-        success = filter isParsed (parse p l)
-        isParsed (_, []) = True
-        isParsed (_, _ ) = False
+run p s = listToMaybe [p | (p, []) <- parse p s]
 
 -- Exercise 3
 
