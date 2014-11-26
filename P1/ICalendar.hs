@@ -54,6 +54,44 @@ main = do Just cal <- readCalendar "examples/rooster_infotc.ics"
           putStrLn $ show $ ppMonth (Year 2012) (Month 11) $ cal
 
 
+parseDateTime :: Parser Char DateTime
+parseDateTime = DateTime <$> parseDate <* symbol 'T' <*> parseTime <*> parseUTC
+
+-- Date
+parseDate :: Parser Char Date
+parseDate = Date <$> parseYear <*> parseMonth <*> parseDay
+
+parseYear :: Parser Char Year
+parseYear = Year <$> parseNInteger 4
+
+parseMonth :: Parser Char Month
+parseMonth = Month <$> parseNInteger 2
+
+parseDay :: Parser Char Day
+parseDay = Day <$> parseNInteger 2
+
+-- Time
+parseTime :: Parser Char Time
+parseTime = Time <$> parseHour <*> parseMinute <*> parseSecond
+
+parseHour :: Parser Char Hour
+parseHour = Hour <$> parseNInteger 2
+
+parseMinute :: Parser Char Minute
+parseMinute = Minute <$> parseNInteger 2
+
+parseSecond :: Parser Char Second
+parseSecond = Second <$> parseNInteger 2
+
+-- Slightly modified version of 'natural'
+-- Uses 'sequence' over a replicated list instead of 'many'
+parseNInteger :: Int -> Parser Char Int
+parseNInteger n = foldl (\ a b -> a * 10 + b) 0 <$> PL.sequence (replicate n newdigit)
+
+parseUTC :: Parser Char Bool
+parseUTC = True  <$ symbol 'Z'
+       <|> False <$ epsilon
+
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
 parseCalendar = undefined
