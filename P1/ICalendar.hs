@@ -113,6 +113,21 @@ parseUTC = True  <$ symbol 'Z'
 parseCalendar :: Parser Char Calendar
 parseCalendar = undefined
 
+parseProperty :: String -> Parser Char a -> Parser Char a
+parseProperty s p = token s *> symbol ':' *> p
+
+parseTimeStamp :: String -> Parser Char DateTime
+parseTimeStamp s = parseProperty s parseDateTime
+
+parseDtStamp :: Parser Char DateTime
+parseDtStamp = parseTimeStamp "DTSTAMP"
+
+parseDtStart :: Parser Char DateTime
+parseDtStart = parseTimeStamp "DTSTART"
+
+parseDtEnd :: Parser Char DateTime
+parseDtEnd = parseTimeStamp "DTEND"
+
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
 readCalendar = undefined
