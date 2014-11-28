@@ -168,9 +168,9 @@ parseDtEnd = parseTimeStamp "DTEND" <* eol
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
 readCalendar path = do 
-	fh <- openFile path ReadMode
-	txt <- hGetContents fh
-	return (run parseCalendar txt)
+    fh <- openFile path ReadMode
+    txt <- hGetContents fh
+    return (run parseCalendar txt)
 
 -- Exercise 3
 -- DO NOT use a derived Show instance. Your printing style needs to be nicer than that :)
@@ -218,20 +218,20 @@ hasSummary s  e = Just s  == summary e
 
 eventTime :: VEvent -> Int
 eventTime e = ((fromInteger $ daysApart de ds) * 24 * 60)
-	+ tDiff te ts
-	where
-		dts = dtStart e
-		ds = date dts
-		ts = time dts
-		dte = dtEnd e
-		de = date dte
-		te = time dte
+    + tDiff te ts
+    where
+        dts = dtStart e
+        ds = date dts
+        ts = time dts
+        dte = dtEnd e
+        de = date dte
+        te = time dte
 
 --tDiff :: Time -> Time -> (Time -> a) -> (a -> Int) -> Int -> Int
 --tDiff end start x unX m = ((unX $ x end) - (unX $ x start)) * m
 tDiff :: Time -> Time -> Int
 tDiff end start = (unHour $ hour end) - (unHour $ hour start)
-			+ (unMinute $ minute end) - (unMinute $ minute start)
+            + (unMinute $ minute end) - (unMinute $ minute start)
 
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
