@@ -110,15 +110,6 @@ parseUTC :: Parser Char Bool
 parseUTC = True  <$ symbol 'Z'
        <|> False <$ epsilon
 
-data TestType = TestType { myTime :: DateTime
-                         , myDate :: DateTime }
-
-instance Show TestType where
-    show  = printTestType
-
-printTestType :: TestType -> String
-printTestType (TestType x y) = printDateTime x ++ "\n" ++ printDateTime y
-
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
 parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> many parseEvent)) (parseEnd "VCALENDAR")
