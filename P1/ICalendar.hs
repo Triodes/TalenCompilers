@@ -31,7 +31,7 @@ newtype Second = Second { unSecond :: Int } deriving (Eq, Ord)
 
 data Calendar = Calendar { prodId :: String
                          , events :: [VEvent] }
-    deriving Eq
+    deriving (Eq, Show)
 
 data VEvent = VEvent { dtStamp     :: DateTime
                      , uid         :: String
@@ -70,7 +70,7 @@ show4 i = replicate (4 - length s) '0' ++ s
 --          putStrLn $ show $ ppMonth (Year 2012) (Month 11) $ cal
 
 main :: IO()
-main = interact (show . run parseEvent)
+main = interact (show . parse parseCalendar)
 
 parseDateTime :: Parser Char DateTime
 parseDateTime = DateTime <$> parseDate <* symbol 'T' <*> parseTime <*> parseUTC
@@ -121,23 +121,40 @@ printTestType (TestType x y) = printDateTime x ++ "\n" ++ printDateTime y
 
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
-parseCalendar = undefined
+parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> many parseEvent)) (parseEnd "VCALENDAR")
 
 eol :: Parser Char String
 eol = token "\r\n" <|> token "\n"
 
+parseTilEnd :: Parser Char String
+parseTilEnd = many (satisfy (\x -> x /= '\n' && x /= '\r')) <* eol
+
 parseEvent :: Parser Char VEvent
-parseEvent = pack (parseBegin "VEVENT" <* eol) (VEvent <$> parseDtStamp <* eol <*> parseUid <* eol <*> parseDtStart <* eol <*> parseDtEnd <* eol <*> optional (parseSum <* eol) <*> optional (parseSum <* eol) <*> optional (parseSum <* eol)) (parseEnd "VEVENT")
+parseEvent = pack (parseBegin "VEVENT") (VEvent <$> parseDtStamp <*> parseUid <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc ) (parseEnd "VEVENT")
 
-parseUid = parseProperty "UID" (many digit)
+parseVersion :: Parser Char String
+parseVersion = parseProperty "VERSION" parseTilEnd
 
-parseSum = parseProperty "SUMMARY" (many digit)
+parseProdId :: Parser Char String
+parseProdId = parseProperty "PRODID" parseTilEnd
+
+parseUid :: Parser Char String
+parseUid = parseProperty "UID" parseTilEnd
+
+parseLoc :: Parser Char String
+parseLoc = parseProperty "LOCATION" parseTilEnd
+
+parseDesc :: Parser Char String
+parseDesc = parseProperty "DESCRIPTION" parseTilEnd
+
+parseSum :: Parser Char String
+parseSum = parseProperty "SUMMARY" parseTilEnd
 
 parseBegin :: String -> Parser Char String
-parseBegin s = parseProperty "BEGIN" (token s)
+parseBegin s = parseProperty "BEGIN" (token s) <* eol
 
 parseEnd :: String -> Parser Char String
-parseEnd s = parseProperty "END" (token s)
+parseEnd s = parseProperty "END" (token s) <* eol
 
 parseProperty :: String -> Parser Char a -> Parser Char a
 parseProperty s p = token s *> symbol ':' *> p
@@ -146,13 +163,13 @@ parseTimeStamp :: String -> Parser Char DateTime
 parseTimeStamp s = parseProperty s parseDateTime
 
 parseDtStamp :: Parser Char DateTime
-parseDtStamp = parseTimeStamp "DTSTAMP"
+parseDtStamp = parseTimeStamp "DTSTAMP" <* eol
 
 parseDtStart :: Parser Char DateTime
-parseDtStart = parseTimeStamp "DTSTART"
+parseDtStart = parseTimeStamp "DTSTART" <* eol
 
 parseDtEnd :: Parser Char DateTime
-parseDtEnd = parseTimeStamp "DTEND"
+parseDtEnd = parseTimeStamp "DTEND" <* eol
 
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
