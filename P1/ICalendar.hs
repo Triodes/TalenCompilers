@@ -1,4 +1,4 @@
-module ICalendar where
+--module ICalendar where
 
 import ParseLib.Abstract as PL
 import Data.Maybe
@@ -40,7 +40,7 @@ data VEvent = VEvent { dtStamp     :: DateTime
                      , description :: Maybe String
                      , summary     :: Maybe String
                      , location    :: Maybe String }
-    deriving Eq
+    deriving (Eq, Show)
 
 
 run :: Parser a b -> [a] -> Maybe b
@@ -69,7 +69,8 @@ show4 i = replicate (4 - length s) '0' ++ s
 --main = do Just cal <- readCalendar "examples/rooster_infotc.ics"
 --          putStrLn $ show $ ppMonth (Year 2012) (Month 11) $ cal
 
-main = print "Ok"
+main :: IO()
+main = interact (show . run parseEvent)
 
 parseDateTime :: Parser Char DateTime
 parseDateTime = DateTime <$> parseDate <* symbol 'T' <*> parseTime <*> parseUTC
@@ -109,9 +110,34 @@ parseUTC :: Parser Char Bool
 parseUTC = True  <$ symbol 'Z'
        <|> False <$ epsilon
 
+data TestType = TestType { myTime :: DateTime
+                         , myDate :: DateTime }
+
+instance Show TestType where
+    show  = printTestType
+
+printTestType :: TestType -> String
+printTestType (TestType x y) = printDateTime x ++ "\n" ++ printDateTime y
+
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
 parseCalendar = undefined
+
+eol :: Parser Char String
+eol = token "\r\n" <|> token "\n"
+
+parseEvent :: Parser Char VEvent
+parseEvent = pack (parseBegin "VEVENT" <* eol) (VEvent <$> parseDtStamp <* eol <*> parseUid <* eol <*> parseDtStart <* eol <*> parseDtEnd <* eol <*> optional (parseSum <* eol) <*> optional (parseSum <* eol) <*> optional (parseSum <* eol)) (parseEnd "VEVENT")
+
+parseUid = parseProperty "UID" (many digit)
+
+parseSum = parseProperty "SUMMARY" (many digit)
+
+parseBegin :: String -> Parser Char String
+parseBegin s = parseProperty "BEGIN" (token s)
+
+parseEnd :: String -> Parser Char String
+parseEnd s = parseProperty "END" (token s)
 
 parseProperty :: String -> Parser Char a -> Parser Char a
 parseProperty s p = token s *> symbol ':' *> p
