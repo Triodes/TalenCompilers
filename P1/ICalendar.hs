@@ -187,6 +187,11 @@ findEvents = undefined
 checkOverlapping :: Calendar -> Bool
 checkOverlapping = undefined
 
+eventOverlap :: VEvent -> [VEvent] -> Bool
+eventOverlap x xs = or . map (ol x) xs
+    where
+        ol x y = timeInEvent (dtStart x) y || timeInEvent (dtEnd x) y
+
 timeSpent :: String -> Calendar -> Int
 timeSpent = undefined
 
