@@ -16,6 +16,8 @@ data Date = Date { year  :: Year
                  , day   :: Day }
     deriving (Eq, Ord)
 
+-- why not synonyms by using type instead of newtype????
+
 newtype Year  = Year { unYear :: Int }  deriving (Eq, Ord)
 newtype Month = Month { unMonth :: Int } deriving (Eq, Ord)
 newtype Day   = Day { unDay :: Int } deriving (Eq, Ord)
@@ -24,6 +26,8 @@ data Time = Time { hour   :: Hour
                  , minute :: Minute
                  , second :: Second }
     deriving (Eq, Ord)
+
+-- why not synonyms by using type instead of newtype????
 
 newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord)
 newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord)
