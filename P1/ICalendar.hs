@@ -199,9 +199,14 @@ overlap :: VEvent -> VEvent -> Bool
 overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
 
 timeSpent :: String -> Calendar -> Int
-timeSpent = undefined
+timeSpent s c = sum $ map eventTime $ filter (hasSummary s) (events c)
 
+hasSummary :: String -> VEvent -> Bool
+hasSummary [] e = Nothing == summary e
+hasSummary s  e = Just s  == summary e
 
+eventTime :: VEvent -> Int
+eventTime e = 0
 
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
