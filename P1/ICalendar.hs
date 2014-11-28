@@ -204,12 +204,22 @@ overlap :: VEvent -> VEvent -> Bool
 overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
 
 timeSpent :: String -> Calendar -> Int
-timeSpent = undefined
+timeSpent s c = sum $ map eventTime $ filter (hasSummary s) (events c)
 
+<<<<<<< HEAD
 daysApart :: Date -> Date -> Integer
 daysApart (Date (Year y1) (Month m1) (Day d1)) (Date (Year y2) (Month m2) (Day d2)) = T.diffDays (getDay y1 m1 d1) (getDay y2 m2 d2)
     where 
         getDay y m d = T.fromGregorian (toInteger y) m d
+=======
+hasSummary :: String -> VEvent -> Bool
+hasSummary [] e = Nothing == summary e
+hasSummary s  e = Just s  == summary e
+
+eventTime :: VEvent -> Int
+eventTime e = 0
+
+>>>>>>> b40928cfb200b4193266f283101504ca28adfd66
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
 ppMonth = undefined
