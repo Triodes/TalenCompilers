@@ -222,8 +222,7 @@ hasSummary s  e = Just s  == summary e
 
 eventTime :: VEvent -> Int
 eventTime e = ((fromInteger $ daysApart de ds) * 24 * 60)
-	+ (tDiff te ts (hour) (unHour) 60)
-	+ (tDiff te ts (minute) (unMinute) 0)
+	+ tDiff te ts
 	where
 		dts = dtStart e
 		ds = date dts
@@ -232,8 +231,11 @@ eventTime e = ((fromInteger $ daysApart de ds) * 24 * 60)
 		de = date dte
 		te = time dte
 
-tDiff :: Time -> Time -> (Time -> a) -> (a -> Int) -> Int -> Int
-tDiff end start x unX m = ((unX $ x end) - (unX $ x start)) * m
+--tDiff :: Time -> Time -> (Time -> a) -> (a -> Int) -> Int -> Int
+--tDiff end start x unX m = ((unX $ x end) - (unX $ x start)) * m
+tDiff :: Time -> Time -> Int
+tDiff end start = (unHour $ hour end) - (unHour $ hour start)
+			+ (unMinute $ minute end) - (unMinute $ minute start)
 
 myTdiff :: Time -> Time -> Int
 myTdiff end start = (h1 - h2) * 60 + m1 - m2
