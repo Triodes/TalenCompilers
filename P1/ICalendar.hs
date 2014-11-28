@@ -177,10 +177,13 @@ printCalendar = undefined
 
 -- Exercise 4
 countEvents :: Calendar -> Int
-countEvents = undefined
+countEvents = length . events
+
+timeInEvent :: DateTime -> VEvent -> Bool
+timeInEvent t e = t >= dtStart e && t <= dtEnd e
 
 findEvents :: DateTime -> Calendar -> [VEvent]
-findEvents = undefined
+findEvents t c = filter (timeInEvent t) (events c)
 
 checkOverlapping :: Calendar -> Bool
 checkOverlapping = undefined
