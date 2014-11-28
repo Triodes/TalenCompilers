@@ -219,7 +219,7 @@ hasSummary s  e = Just s  == summary e
 eventTime :: VEvent -> Int
 eventTime e = ((fromInteger $ daysApart de ds) * 24 * 60)
 	+ (tDiff te ts (hour) (unHour) 60)
-	+ (tDiff te ts (minute) (unMinute) 0)
+	+ (tDiff te ts (minute) (unMinute) 1)
 	where
 		dts = dtStart e
 		ds = date dts
