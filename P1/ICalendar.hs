@@ -3,7 +3,7 @@
 import ParseLib.Abstract as PL
 import Data.Maybe
 import Text.PrettyPrint
-
+import System.IO
 
 data DateTime = DateTime { date :: Date
                          , time :: Time
@@ -173,8 +173,10 @@ parseDtEnd = parseTimeStamp "DTEND" <* eol
 
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
-readCalendar = undefined
-
+readCalendar path = do 
+	fh <- openFile path ReadMode
+	txt <- hGetContents fh
+	return (run parseCalendar txt)
 
 -- Exercise 3
 -- DO NOT use a derived Show instance. Your printing style needs to be nicer than that :)
