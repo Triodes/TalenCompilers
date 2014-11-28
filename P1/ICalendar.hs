@@ -1,8 +1,9 @@
---module ICalendar where
+module Main where
 
 import ParseLib.Abstract as PL
 import Data.Maybe
 import Text.PrettyPrint
+import qualified Data.Time as T
 import System.IO
 
 data DateTime = DateTime { date :: Date
@@ -205,8 +206,10 @@ overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
 timeSpent :: String -> Calendar -> Int
 timeSpent = undefined
 
-
-
+daysApart :: Date -> Date -> Integer
+daysApart (Date (Year y1) (Month m1) (Day d1)) (Date (Year y2) (Month m2) (Day d2)) = T.diffDays (getDay y1 m1 d1) (getDay y2 m2 d2)
+    where 
+        getDay y m d = T.fromGregorian (toInteger y) m d
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
 ppMonth = undefined
