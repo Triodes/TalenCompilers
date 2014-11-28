@@ -189,11 +189,15 @@ timeInEvent t e = t >= dtStart e && t <= dtEnd e
 findEvents :: DateTime -> Calendar -> [VEvent]
 findEvents t c = filter (timeInEvent t) (events c)
 
+-- ask if situation where begin and end are equal counts as overlap
+
 checkOverlapping :: Calendar -> Bool
-checkOverlapping x = or $ map (eventOverlap $ events x) (events x)
+checkOverlapping cal = or $ map (eventOverlap $ evts) evts
+    where
+        evts = events cal
 
 eventOverlap :: [VEvent] -> VEvent -> Bool
-eventOverlap x xs = or $ map (overlap xs) x
+eventOverlap evts evt = or $ map (overlap evt) evts
 
 overlap :: VEvent -> VEvent -> Bool
 overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
