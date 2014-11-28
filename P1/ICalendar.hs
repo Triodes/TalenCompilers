@@ -235,6 +235,14 @@ eventTime e = ((fromInteger $ daysApart de ds) * 24 * 60)
 tDiff :: Time -> Time -> (Time -> a) -> (a -> Int) -> Int -> Int
 tDiff end start x unX m = ((unX $ x end) - (unX $ x start)) * m
 
+myTdiff :: Time -> Time -> Int
+myTdiff end start = (h1 - h2) * 60 + m1 - m2
+    where
+        h1 = unHour $ hour end
+        h2 = unHour $ hour start
+        m1 = unMinute $ minute end
+        m2 = unMinute $ minute start
+
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
 ppMonth = undefined
