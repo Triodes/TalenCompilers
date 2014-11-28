@@ -210,6 +210,7 @@ overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
 timeSpent :: String -> Calendar -> Int
 timeSpent s c = sum $ map eventTime $ filter (hasSummary s) (events c)
 
+-- First argument is latest date
 daysApart :: Date -> Date -> Integer
 daysApart (Date (Year y1) (Month m1) (Day d1)) (Date (Year y2) (Month m2) (Day d2)) = T.diffDays (getDay y1 m1 d1) (getDay y2 m2 d2)
     where 
@@ -220,7 +221,19 @@ hasSummary [] e = Nothing == summary e
 hasSummary s  e = Just s  == summary e
 
 eventTime :: VEvent -> Int
-eventTime e = 0
+eventTime e = ((fromInteger $ daysApart de ds) * 24 * 60)
+	+ (tDiff te ts (hour) (unHour) 60)
+	+ (tDiff te ts (minute) (unMinute) 0)
+	where
+		dts = dtStart e
+		ds = date dts
+		ts = time dts
+		dte = dtEnd e
+		de = date dte
+		te = time dte
+
+tDiff :: Time -> Time -> (Time -> a) -> (a -> Int) -> Int -> Int
+tDiff end start x unX m = ((unX $ x end) - (unX $ x start)) * m
 
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
