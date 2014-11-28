@@ -3,7 +3,7 @@
 import ParseLib.Abstract as PL
 import Data.Maybe
 import Text.PrettyPrint
-
+import System.IO
 
 data DateTime = DateTime { date :: Date
                          , time :: Time
@@ -166,8 +166,10 @@ parseDtEnd = parseTimeStamp "DTEND" <* eol
 
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
-readCalendar = undefined
-
+readCalendar path = do 
+	fh <- openFile path ReadMode
+	txt <- hGetContents fh
+	return (run parseCalendar txt)
 
 -- Exercise 3
 -- DO NOT use a derived Show instance. Your printing style needs to be nicer than that :)
@@ -181,16 +183,20 @@ printEvent x = "BEGIN:VEVENT\r\n" ++ "" ++ "END:VEVENT"
 countEvents :: Calendar -> Int
 countEvents = length . events
 
+timeInEvent :: DateTime -> VEvent -> Bool
+timeInEvent t e = t >= dtStart e && t <= dtEnd e
+
 findEvents :: DateTime -> Calendar -> [VEvent]
-findEvents = undefined
+findEvents t c = filter (timeInEvent t) (events c)
 
 checkOverlapping :: Calendar -> Bool
-checkOverlapping = undefined
+checkOverlapping x = or $ map (eventOverlap $ events x) (events x)
 
-eventOverlap :: VEvent -> [VEvent] -> Bool
-eventOverlap x xs = or . map (ol x) xs
-    where
-        ol x y = timeInEvent (dtStart x) y || timeInEvent (dtEnd x) y
+eventOverlap :: [VEvent] -> VEvent -> Bool
+eventOverlap x xs = or $ map (overlap xs) x
+
+overlap :: VEvent -> VEvent -> Bool
+overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
 
 timeSpent :: String -> Calendar -> Int
 timeSpent = undefined
