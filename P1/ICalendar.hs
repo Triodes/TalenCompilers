@@ -121,7 +121,9 @@ parseTilEnd :: Parser Char String
 parseTilEnd = many (satisfy (\x -> x /= '\n' && x /= '\r')) <* eol
 
 parseEvent :: Parser Char VEvent
-parseEvent = pack (parseBegin "VEVENT") (VEvent <$> parseDtStamp <*> parseUid <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc ) (parseEnd "VEVENT")
+parseEvent = pack (parseBegin "VEVENT") parseBody (parseEnd "VEVENT")
+  where
+    parseBody = VEvent <$> parseDtStamp <*> parseUid <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
 
 parseVersion :: Parser Char String
 parseVersion = parseProperty "VERSION" parseTilEnd
@@ -170,12 +172,14 @@ readCalendar = undefined
 -- Exercise 3
 -- DO NOT use a derived Show instance. Your printing style needs to be nicer than that :)
 printCalendar :: Calendar -> String
-printCalendar = undefined
+printCalendar x = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n"
 
+printEvent :: VEvent -> String
+printEvent x = "BEGIN:VEVENT\r\n" ++ "" ++ "END:VEVENT"
 
 -- Exercise 4
 countEvents :: Calendar -> Int
-countEvents = undefined
+countEvents = length . events
 
 findEvents :: DateTime -> Calendar -> [VEvent]
 findEvents = undefined
