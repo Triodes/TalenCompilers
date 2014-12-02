@@ -77,6 +77,9 @@ show4 i = replicate (4 - length s) '0' ++ s
 main :: IO()
 main = interact (show . parse parseCalendar)
 
+recogniseCalendar :: String -> Maybe Calendar
+recogniseCalendar = run parseCalendar
+
 parseDateTime :: Parser Char DateTime
 parseDateTime = DateTime <$> parseDate <* symbol 'T' <*> parseTime <*> parseUTC
 
@@ -128,7 +131,7 @@ parseTilEnd = many (satisfy (\x -> x /= '\n' && x /= '\r')) <* eol
 parseEvent :: Parser Char VEvent
 parseEvent = pack (parseBegin "VEVENT") parseBody (parseEnd "VEVENT")
   where
-    parseBody = VEvent <$> parseDtStamp <*> parseUid <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
+    parseBody = flip VEvent <$> parseUid <*> parseDtStamp <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
 
 parseVersion :: Parser Char String
 parseVersion = parseProperty "VERSION" parseTilEnd
