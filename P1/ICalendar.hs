@@ -2,7 +2,7 @@ module Main where
 
 import ParseLib.Abstract as PL
 import Data.Maybe
-import Text.PrettyPrint
+import Text.PrettyPrint as PP
 import qualified Data.Time as T
 import System.IO
 
@@ -244,5 +244,17 @@ tDiff end start = (h1 - h2) * 60 + m1 - m2
 
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
-ppMonth (Year y) (Month m) (Calendar pid es) = text ""
+ppMonth yy@(Year y) mm@(Month m) (Calendar pid es) = printHeader $$ vLine
+    where
+        printHeader = hcat $ punctuate hLine (map daySpace [1..7])
+        wDay = 14
+        daySpace n = headSpace <> (text $ weekDay n)
+        headSpace = text $ replicate (wDay - 3) ' '
+        fullSpace = text $ replicate wDay ' '
+        hLine = text "|"
+        vLine = hcat $ punctuate (char '+') (replicate 7 (text $ replicate wDay '-'))
+        firstDay = ((fromInteger $ daysApart (Date yy mm (Day 1)) epoch `mod` 7) + 4) `mod` 7
+        epoch = Date (Year 1970) (Month 1) (Day 1)
 
+weekDay :: Int -> String
+weekDay d = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] !! (d - 1)
