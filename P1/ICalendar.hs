@@ -47,6 +47,14 @@ data VEvent = VEvent { dtStamp     :: DateTime
                      , location    :: Maybe String }
     deriving (Eq, Show)
 
+data Property = DtStamp DateTime
+              | Uid String
+              | DtStart DateTime
+              | DtEnd DateTime
+              | Description String
+              | Summary String
+              | Location String
+    deriving (Eq, Ord, Show)
 
 run :: Parser a b -> [a] -> Maybe b
 run p s = listToMaybe [p | (p, []) <- parse p s]
@@ -118,9 +126,18 @@ parseUTC :: Parser Char Bool
 parseUTC = True  <$ symbol 'Z'
        <|> False <$ epsilon
 
+
+
+
+
+
+
+
+
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
-parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> many parseEvent)) (parseEnd "VCALENDAR")
+--parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> many parseEvent)) (parseEnd "VCALENDAR")
+parseCalendar = undefined
 
 eol :: Parser Char String
 eol = token "\r\n" <|> token "\n"
@@ -128,49 +145,88 @@ eol = token "\r\n" <|> token "\n"
 parseTilEnd :: Parser Char String
 parseTilEnd = many (satisfy (\x -> x /= '\n' && x /= '\r')) <* eol
 
-parseEvent :: Parser Char VEvent
-parseEvent = pack (parseBegin "VEVENT") parseBody (parseEnd "VEVENT")
-  where
-    parseBody = flip VEvent <$> parseUid <*> parseDtStamp <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
+parseEvent :: Parser Char (Maybe VEvent)
+parseEvent = pack (parseBegin "VEVENT") parseEventProps (parseEnd "VEVENT")
+--  where
+--    parseBody = flip VEvent <$> parseUid <*> parseDtStamp <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
+
+parseEventProps :: Parser Char (Maybe VEvent)
+parseEventProps = f <$> many parseProperty
+    where f props = do dtstamp  <- exactlyOne [p | (DtStamp p) <- props]
+                       uid      <- exactlyOne [p | (Uid p) <- props]
+                       dtstart  <- exactlyOne [p | (DtStart p) <- props]
+                       dtend    <- exactlyOne [p | (DtEnd p) <- props]
+                       desc     <- zeroOrOne [p | (Description p) <- props]
+                       summary  <- zeroOrOne [p | (Summary p) <- props]
+                       location <- zeroOrOne [p | (Location p) <- props]
+                       return (VEvent dtstamp uid dtstart dtend desc summary location)
+
+
+exactlyOne :: [a] -> Maybe a
+exactlyOne []     = Nothing
+exactlyOne (x:[]) = Just x
+exactlyOne (x:xs) = Nothing
+
+zeroOrOne :: [a] -> Maybe (Maybe a)
+zeroOrOne []     = Just Nothing
+zeroOrOne (x:[]) = Just (Just x)
+zeroOrOne (x:xs) = Nothing
 
 parseVersion :: Parser Char String
-parseVersion = parseProperty "VERSION" parseTilEnd
+parseVersion = parseLabel "VERSION" parseTilEnd
 
 parseProdId :: Parser Char String
-parseProdId = parseProperty "PRODID" parseTilEnd
+parseProdId = parseLabel "PRODID" parseTilEnd
 
-parseUid :: Parser Char String
-parseUid = parseProperty "UID" parseTilEnd
+parseProperty = choice [parseUid,
+                        parseDtStamp,
+                        parseDtStart,
+                        parseDtEnd,
+                        parseSum,
+                        parseDesc,
+                        parseLoc]
 
-parseLoc :: Parser Char String
-parseLoc = parseProperty "LOCATION" parseTilEnd
+parseUid :: Parser Char Property
+parseUid = Uid <$> parseLabel "UID" parseTilEnd
 
-parseDesc :: Parser Char String
-parseDesc = parseProperty "DESCRIPTION" parseTilEnd
+parseLoc :: Parser Char Property
+parseLoc = Location <$> parseLabel "LOCATION" parseTilEnd
 
-parseSum :: Parser Char String
-parseSum = parseProperty "SUMMARY" parseTilEnd
+parseDesc :: Parser Char Property
+parseDesc = Description <$> parseLabel "DESCRIPTION" parseTilEnd
+
+parseSum :: Parser Char Property
+parseSum = Summary <$> parseLabel "SUMMARY" parseTilEnd
 
 parseBegin :: String -> Parser Char String
-parseBegin s = parseProperty "BEGIN" (token s) <* eol
+parseBegin s = parseLabel "BEGIN" (token s) <* eol
 
 parseEnd :: String -> Parser Char String
-parseEnd s = parseProperty "END" (token s) <* eol
+parseEnd s = parseLabel "END" (token s) <* eol
 
-parseProperty :: String -> Parser Char a -> Parser Char a
-parseProperty s p = token s *> symbol ':' *> p
+parseLabel :: String -> Parser Char a -> Parser Char a
+parseLabel s p = token s *> symbol ':' *> p
 
 parseTimeStamp :: String -> Parser Char DateTime
-parseTimeStamp s = parseProperty s parseDateTime
+parseTimeStamp s = parseLabel s parseDateTime
 
-parseDtStamp :: Parser Char DateTime
-parseDtStamp = parseTimeStamp "DTSTAMP" <* eol
+parseDtStamp :: Parser Char Property
+parseDtStamp = DtStamp <$> parseTimeStamp "DTSTAMP" <* eol
 
-parseDtStart :: Parser Char DateTime
-parseDtStart = parseTimeStamp "DTSTART" <* eol
+parseDtStart :: Parser Char Property
+parseDtStart = DtStart <$> parseTimeStamp "DTSTART" <* eol
 
-parseDtEnd :: Parser Char DateTime
-parseDtEnd = parseTimeStamp "DTEND" <* eol
+parseDtEnd :: Parser Char Property
+parseDtEnd = DtEnd <$> parseTimeStamp "DTEND" <* eol
+
+
+
+
+
+
+
+
+
 
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
