@@ -38,13 +38,13 @@ data Calendar = Calendar { prodId :: String
                          , events :: [VEvent] }
     deriving (Eq, Show)
 
-data VEvent = VEvent { dtStamp     :: DateTime
-                     , uid         :: String
-                     , dtStart     :: DateTime
+data VEvent = VEvent { dtStart     :: DateTime
                      , dtEnd       :: DateTime
-                     , description :: Maybe String
+                     , location    :: Maybe String 
+                     , uid         :: String
+                     , dtStamp     :: DateTime
                      , summary     :: Maybe String
-                     , location    :: Maybe String }
+                     , description :: Maybe String }
     deriving (Eq, Show)
 
 
@@ -71,11 +71,11 @@ show4 i = replicate (4 - length s) '0' ++ s
 -- "Main" block, DO NOT EDIT.
 -- If you want to run the parser + pretty-printing, rename this module (first line) to "Main".
 -- DO NOT forget to rename the module back to "ICalendar" before submitting to DomJudge.
---main = do Just cal <- readCalendar "examples/rooster_infotc.ics"
---          putStrLn $ show $ ppMonth (Year 2012) (Month 11) $ cal
+main = do Just cal <- readCalendar "examples/rooster_infotc.ics"
+          putStrLn $ show $ ppMonth (Year 2012) (Month 11) $ cal
 
-main :: IO()
-main = interact (show . parse parseCalendar)
+-- main :: IO()
+-- main = interact (show . parse parseCalendar)
 
 recogniseCalendar :: String -> Maybe Calendar
 recogniseCalendar = run parseCalendar
@@ -120,7 +120,7 @@ parseUTC = True  <$ symbol 'Z'
 
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
-parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> many parseEvent)) (parseEnd "VCALENDAR")
+parseCalendar = pack (parseBegin "VCALENDAR") (Calendar <$> parseProdId <* parseVersion <*> many parseEvent) (parseEnd "VCALENDAR")
 
 eol :: Parser Char String
 eol = token "\r\n" <|> token "\n"
@@ -131,7 +131,7 @@ parseTilEnd = many (satisfy (\x -> x /= '\n' && x /= '\r')) <* eol
 parseEvent :: Parser Char VEvent
 parseEvent = pack (parseBegin "VEVENT") parseBody (parseEnd "VEVENT")
   where
-    parseBody = flip VEvent <$> parseUid <*> parseDtStamp <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
+    parseBody = VEvent <$> parseDtStart <*> parseDtEnd <*> optional parseLoc <*> parseUid <*> parseDtStamp <*> optional parseSum <*> optional parseDesc
 
 parseVersion :: Parser Char String
 parseVersion = parseProperty "VERSION" parseTilEnd
@@ -244,5 +244,5 @@ tDiff end start = (h1 - h2) * 60 + m1 - m2
 
 -- Exercise 5
 ppMonth :: Year -> Month -> Calendar -> Doc
-ppMonth = undefined
+ppMonth (Year y) (Month m) (Calendar pid es) = text ""
 
