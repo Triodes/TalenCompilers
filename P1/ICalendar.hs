@@ -136,41 +136,54 @@ parseUTC = True  <$ symbol 'Z'
 
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
---parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> many parseEvent)) (parseEnd "VCALENDAR")
-parseCalendar = undefined
+parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> parseEvents)) (parseEnd "VCALENDAR")
+
+parseCalendarBody :: Parser Char Calendar
+parseCalendarBody = pc1 <|> pc2
+    where pc1 = parseVersion *> (Calendar <$> parseProdId <*> parseEvents)
+          pc2 = Calendar <$> parseProdId <* parseVersion <*> parseEvents
 
 eol :: Parser Char String
 eol = token "\r\n" <|> token "\n"
 
-parseTilEnd :: Parser Char String
-parseTilEnd = many (satisfy (\x -> x /= '\n' && x /= '\r')) <* eol
+multiLine :: Parser Char Char
+multiLine = const '|' <$ eol <*> (token " " <|> token "\t")
 
-parseEvent :: Parser Char (Maybe VEvent)
-parseEvent = pack (parseBegin "VEVENT") parseEventProps (parseEnd "VEVENT")
+parseTilEnd :: Parser Char String
+--parseTilEnd = many anyNoEol <* eol
+parseTilEnd = many (anyNoEol <|> multiLine) <* eol
+    where anyNoEol = satisfy (\x -> x /= '\n' && x /= '\r')
+
+parseEventProps :: Parser Char [Property]
+parseEventProps = pack (parseBegin "VEVENT") (many parseProperty) (parseEnd "VEVENT")
 --  where
 --    parseBody = flip VEvent <$> parseUid <*> parseDtStamp <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
 
-parseEventProps :: Parser Char (Maybe VEvent)
-parseEventProps = f <$> many parseProperty
-    where f props = do dtstamp  <- exactlyOne [p | (DtStamp p) <- props]
-                       uid      <- exactlyOne [p | (Uid p) <- props]
-                       dtstart  <- exactlyOne [p | (DtStart p) <- props]
-                       dtend    <- exactlyOne [p | (DtEnd p) <- props]
-                       desc     <- zeroOrOne [p | (Description p) <- props]
-                       summary  <- zeroOrOne [p | (Summary p) <- props]
-                       location <- zeroOrOne [p | (Location p) <- props]
+parseEvents :: Parser Char [VEvent]
+parseEvents = f <$> many parseEvent
+    where f x = map fromJust $ filter isJust x
+
+parseEvent :: Parser Char (Maybe VEvent)
+parseEvent = f <$> parseEventProps
+    where f props = do dtstamp  <- exactlyOnce [p | (DtStamp p) <- props]
+                       uid      <- exactlyOnce [p | (Uid p) <- props]
+                       dtstart  <- exactlyOnce [p | (DtStart p) <- props]
+                       dtend    <- exactlyOnce [p | (DtEnd p) <- props]
+                       desc     <- zeroOrOnce [p | (Description p) <- props]
+                       summary  <- zeroOrOnce [p | (Summary p) <- props]
+                       location <- zeroOrOnce [p | (Location p) <- props]
                        return (VEvent dtstamp uid dtstart dtend desc summary location)
 
 
-exactlyOne :: [a] -> Maybe a
-exactlyOne []     = Nothing
-exactlyOne (x:[]) = Just x
-exactlyOne (x:xs) = Nothing
+exactlyOnce :: [a] -> Maybe a
+exactlyOnce []     = Nothing
+exactlyOnce (x:[]) = Just x
+exactlyOnce (x:xs) = Nothing
 
-zeroOrOne :: [a] -> Maybe (Maybe a)
-zeroOrOne []     = Just Nothing
-zeroOrOne (x:[]) = Just (Just x)
-zeroOrOne (x:xs) = Nothing
+zeroOrOnce :: [a] -> Maybe (Maybe a)
+zeroOrOnce []     = Just Nothing
+zeroOrOnce (x:[]) = Just (Just x)
+zeroOrOnce (x:xs) = Nothing
 
 parseVersion :: Parser Char String
 parseVersion = parseLabel "VERSION" parseTilEnd
