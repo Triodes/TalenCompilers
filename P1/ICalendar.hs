@@ -1,4 +1,7 @@
-module Main where
+module ICalendar where
+
+-- Aron List (3896536)
+-- Jelle Hol (3760685)
 
 import ParseLib.Abstract as PL
 import Data.Maybe
@@ -36,7 +39,7 @@ newtype Second = Second { unSecond :: Int } deriving (Eq, Ord)
 
 data Calendar = Calendar { prodId :: String
                          , events :: [VEvent] }
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data VEvent = VEvent { dtStamp     :: DateTime
                      , uid         :: String
@@ -45,7 +48,7 @@ data VEvent = VEvent { dtStamp     :: DateTime
                      , description :: Maybe String
                      , summary     :: Maybe String
                      , location    :: Maybe String }
-    deriving (Eq, Show)
+    deriving (Eq)
 
 data Property = DtStamp DateTime
               | Uid String
@@ -54,13 +57,13 @@ data Property = DtStamp DateTime
               | Description String
               | Summary String
               | Location String
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
 
 run :: Parser a b -> [a] -> Maybe b
-run p s = listToMaybe [p | (p, []) <- parse p s]
+run p s = listToMaybe [x | (x, []) <- parse p s]
 
-instance Show DateTime where
-    show = printDateTime
+--instance Show DateTime where
+--    show = printDateTime
 
 printDateTime :: DateTime -> String
 printDateTime (DateTime d t u) = show4 (unYear $ year d) ++ show2 (unMonth $ month d) ++ show2 (unDay $ day d)
@@ -79,11 +82,11 @@ show4 i = replicate (4 - length s) '0' ++ s
 -- "Main" block, DO NOT EDIT.
 -- If you want to run the parser + pretty-printing, rename this module (first line) to "Main".
 -- DO NOT forget to rename the module back to "ICalendar" before submitting to DomJudge.
---main = do Just cal <- readCalendar "examples/rooster_infotc.ics"
---          putStrLn $ show $ ppMonth (Year 2012) (Month 11) $ cal
+main = do Just cal <- readCalendar "examples/rooster_infotc.ics"
+          putStrLn $ show $ ppMonth (Year 2012) (Month 11) $ cal
 
-main :: IO()
-main = interact (show . parse parseCalendar)
+--main :: IO()
+--main = interact (show . parse parseCalendar)
 
 recognizeCalendar :: String -> Maybe Calendar
 recognizeCalendar = run parseCalendar
@@ -179,12 +182,12 @@ parseEvent = f <$> parseEventProps
 
 exactlyOnce :: [a] -> Maybe a
 exactlyOnce []     = Nothing
-exactlyOnce (x:[]) = Just x
+exactlyOnce [x]    = Just x
 exactlyOnce (x:xs) = Nothing
 
 zeroOrOnce :: [a] -> Maybe (Maybe a)
 zeroOrOnce []     = Just Nothing
-zeroOrOnce (x:[]) = Just (Just x)
+zeroOrOnce [x]    = Just (Just x)
 zeroOrOnce (x:xs) = Nothing
 
 parseVersion :: Parser Char String
@@ -193,6 +196,7 @@ parseVersion = parseLabel "VERSION" parseTilEnd
 parseProdId :: Parser Char String
 parseProdId = parseLabel "PRODID" parseTilEnd
 
+parseProperty :: Parser Char Property
 parseProperty = choice [parseUid,
                         parseDtStamp,
                         parseDtStart,
@@ -271,7 +275,7 @@ findEvents t c = filter (timeInEvent t) (events c)
 -- ask if situation where begin and end are equal counts as overlap
 
 checkOverlapping :: Calendar -> Bool
-checkOverlapping cal = or $ map (eventOverlap $ evts) evts
+checkOverlapping cal = any (eventOverlap evts) evts
     where
         evts = events cal
 
@@ -279,7 +283,7 @@ eventOverlap :: [VEvent] -> VEvent -> Bool
 eventOverlap evts evt = any (overlap evt) evts
 
 overlap :: VEvent -> VEvent -> Bool
-overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
+overlap u v = if u == v then False else timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
 
 timeSpent :: String -> Calendar -> Int
 timeSpent s c = sum $ map eventTime $ filter (hasSummary s) (events c)
@@ -295,7 +299,7 @@ hasSummary [] e = Nothing == summary e
 hasSummary s  e = Just s  == summary e
 
 eventTime :: VEvent -> Int
-eventTime e = ((fromInteger $ daysApart de ds) * 24 * 60)
+eventTime e = fromInteger (daysApart de ds) * 24 * 60
     + tDiff te ts
     where
         dts = dtStart e
