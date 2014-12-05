@@ -165,8 +165,7 @@ parseEventProps = pack (parseBegin "VEVENT") (many parseProperty) (parseEnd "VEV
 --    parseBody = flip VEvent <$> parseUid <*> parseDtStamp <*> parseDtStart <*> parseDtEnd <*> optional parseDesc <*> optional parseSum <*> optional parseLoc
 
 parseEvents :: Parser Char [VEvent]
-parseEvents = f <$> many parseEvent
-    where f x = map fromJust $ filter isJust x
+parseEvents = catMaybes <$> many parseEvent
 
 parseEvent :: Parser Char (Maybe VEvent)
 parseEvent = f <$> parseEventProps
