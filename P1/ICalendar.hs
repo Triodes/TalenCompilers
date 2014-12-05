@@ -85,8 +85,8 @@ show4 i = replicate (4 - length s) '0' ++ s
 main :: IO()
 main = interact (show . parse parseCalendar)
 
-recogniseCalendar :: String -> Maybe Calendar
-recogniseCalendar = run parseCalendar
+recognizeCalendar :: String -> Maybe Calendar
+recognizeCalendar = run parseCalendar
 
 parseDateTime :: Parser Char DateTime
 parseDateTime = DateTime <$> parseDate <* symbol 'T' <*> parseTime <*> parseUTC
@@ -136,7 +136,7 @@ parseUTC = True  <$ symbol 'Z'
 
 -- Exercise 1
 parseCalendar :: Parser Char Calendar
-parseCalendar = pack (parseBegin "VCALENDAR") (parseVersion *> (Calendar <$> parseProdId <*> parseEvents)) (parseEnd "VCALENDAR")
+parseCalendar = pack (parseBegin "VCALENDAR") parseCalendarBody (parseEnd "VCALENDAR")
 
 parseCalendarBody :: Parser Char Calendar
 parseCalendarBody = pc1 <|> pc2
@@ -146,13 +146,15 @@ parseCalendarBody = pc1 <|> pc2
 eol :: Parser Char String
 eol = token "\r\n" <|> token "\n"
 
-multiLine :: Parser Char Char
-multiLine = const '|' <$ eol <*> (token " " <|> token "\t")
+multiLine :: Parser Char String
+multiLine =  concat <$> listOf singleLine ((++) <$> eol <*> (token " " <|> token "\t"))
+
+singleLine :: Parser Char String
+singleLine = many anyNoEol
+    where anyNoEol = satisfy (\x -> x /= '\n' && x /= '\r')
 
 parseTilEnd :: Parser Char String
---parseTilEnd = many anyNoEol <* eol
-parseTilEnd = many (anyNoEol <|> multiLine) <* eol
-    where anyNoEol = satisfy (\x -> x /= '\n' && x /= '\r')
+parseTilEnd = multiLine <* eol
 
 parseEventProps :: Parser Char [Property]
 parseEventProps = pack (parseBegin "VEVENT") (many parseProperty) (parseEnd "VEVENT")
@@ -274,7 +276,7 @@ checkOverlapping cal = or $ map (eventOverlap $ evts) evts
         evts = events cal
 
 eventOverlap :: [VEvent] -> VEvent -> Bool
-eventOverlap evts evt = or $ map (overlap evt) evts
+eventOverlap evts evt = any (overlap evt) evts
 
 overlap :: VEvent -> VEvent -> Bool
 overlap u v = timeInEvent (dtStart u) v || timeInEvent (dtEnd u) v
