@@ -10,28 +10,30 @@ $pm    = [\+\-]
 
 tokens :-
 
-\->         { Arrow }
-\.          { Dot }
-\,          { Comma }
-\;          { Semicolon }
-go          { Go }
-take        { Take }
-mark        { Mark }
-nothing     { NothingT }
-turn        { Turn }
-case        { Case }
-of          { Of }
-end         { End }
-left        { LeftT }
-right       { RightT }
-front       { Front }
-Empty       { Empty }
-Lambda      { Lambda }
-Debris      { Debris }
-Asteroid    { Asteroid }
-Boundary    { Boudary }
-\_          { Underscore }
-[$alpha $digit $pm]+ { Ident }
+$white+     ;
+"--".*      ;
+\->         {const Arrow }
+\.          {const Dot }
+\,          {const Comma }
+\;          {const Semicolon }
+go          {const Go }
+take        {const Take }
+mark        {const Mark }
+nothing     {const NothingT }
+turn        {const Turn }
+case        {const Case }
+of          {const Of }
+end         {const End }
+left        {const LeftT }
+right       {const RightT }
+front       {const Front }
+Empty       {const Empty }
+Lambda      {const Lambda }
+Debris      {const Debris }
+Asteroid    {const Asteroid }
+Boundary    {const Boudary }
+\_          {const Underscore }
+[$alpha $digit $pm]+ {\s -> Ident s}
 
 
 
@@ -44,6 +46,7 @@ data Token = Dot | Comma | Go | Take | Mark | Semicolon
            | LeftT | RightT | Front | Empty | Arrow
            | Lambda | Debris | Asteroid | Boudary | Underscore
            | Ident String
+           deriving (Show)
 
 main = do
   s <- getContents
