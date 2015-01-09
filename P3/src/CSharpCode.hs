@@ -2,6 +2,7 @@ module CSharpCode where
 
 import Prelude hiding (LT, GT, EQ)
 import Data.Map as M
+import Data.Char
 import CSharpLex
 import CSharpGram
 import CSharpAlgebra
@@ -53,7 +54,11 @@ fStatBlock :: [Code] -> Code
 fStatBlock = concat
 
 fExprCon :: Token -> ValueOrAddress -> Code
-fExprCon (ConstInt n) va = [LDC n]
+fExprCon c va = case c of
+                    ConstInt  n -> [LDC n]
+                    -- Was true nou 1 of -1 in SSM? - Jelle
+                    ConstBool b -> [LDC (if b == True then 1 else 0)]
+                    ConstChar c -> [LDC (ord c)]
 
 fExprVar :: Token -> ValueOrAddress -> Code
 fExprVar (LowerId x) va = let loc = 37 in case va of
