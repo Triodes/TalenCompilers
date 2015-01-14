@@ -1,6 +1,6 @@
 class Hello
 {
-    int g;
+    int g; // lol comment
     
     void main()
     {
@@ -12,7 +12,7 @@ class Hello
     {
         int y;
         y = x * x;
-        return y;   
+        return /* this is not x */ y;   
     }
 
     int abs(int x)

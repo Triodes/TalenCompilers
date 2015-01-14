@@ -55,8 +55,21 @@ terminals =
     ]
 
 
+lexIgnore :: Parser Char String
+lexIgnore = concat <$> greedy (lexWhiteSpace <|> lexComments)
+
 lexWhiteSpace :: Parser Char String
-lexWhiteSpace = greedy (satisfy isSpace)
+lexWhiteSpace = greedy1 (satisfy isSpace)
+
+lexComments :: Parser Char String
+lexComments = token "//" *> many anyNoEol <* eol
+    <|> token "/*" *> many anySymbol <* token "*/"
+
+anyNoEol :: Parser Char Char
+anyNoEol = satisfy (\x -> x /= '\r' && x /= '\n')
+
+eol :: Parser Char String
+eol = token "\n" <|> token "\r\n"
 
 lexLowerId :: Parser Char Token
 lexLowerId = (\x xs -> LowerId (x:xs)) <$> satisfy isLower <*> greedy (satisfy isAlphaNum)
@@ -71,7 +84,7 @@ lexConstBool :: Parser Char Token
 lexConstBool = (ConstBool . read . \(x:xs) -> toUpper x : xs) <$> (token "true" <|> token "false")
 
 lexConstChar :: Parser Char Token
-lexConstChar = ConstChar <$> pack (symbol '\'') (satisfy (const True)) (symbol '\'')
+lexConstChar = ConstChar <$> pack (symbol '\'') anySymbol (symbol '\'')
 
 lexEnum :: (String -> Token) -> [String] -> Parser Char Token
 lexEnum f xs = f <$> choice (map keyword xs)
@@ -100,7 +113,7 @@ lexToken = greedyChoice
              ]
 
 lexicalScanner :: Parser Char [Token]
-lexicalScanner = lexWhiteSpace *> greedy (lexToken <* lexWhiteSpace) <* eof
+lexicalScanner = lexIgnore *> greedy (lexToken <* lexIgnore) <* eof
 
 
 sStdType :: Parser Token Token

@@ -56,8 +56,7 @@ fStatBlock = concat
 fExprCon :: Token -> ValueOrAddress -> Code
 fExprCon c va = case c of
                     ConstInt  n -> [LDC n]
-                    -- Was true nou 1 of -1 in SSM? - Jelle
-                    ConstBool b -> [LDC (if b == True then 1 else 0)]
+                    ConstBool b -> [LDC (if b then 1 else 0)]
                     ConstChar c -> [LDC (ord c)]
 
 fExprVar :: Token -> ValueOrAddress -> Code
