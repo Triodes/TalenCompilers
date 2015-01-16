@@ -31,7 +31,7 @@ fClas c ms = [Bsr "main", HALT] ++ concat ms
 fMembDecl :: Decl -> Code
 fMembDecl d = []
 
-test = "class Hello { void main() { test(1 + 4, 2); } }"
+test = "class Hello { void main() { 5 + 5; } }"
 
 fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
 fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s env ++ [UNLINK] ++ [RET]

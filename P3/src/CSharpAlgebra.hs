@@ -26,7 +26,6 @@ type CSharpAlgebra clas memb stat expr
          )
       )
 
-
 foldCSharp :: CSharpAlgebra clas memb stat expr -> Class -> clas
 foldCSharp (c1, (m1,m2), (s1,s2,s3,s4,s5,s6), (e1,e2,e3,e4)) = fClas
     where

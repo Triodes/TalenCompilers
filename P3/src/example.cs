@@ -9,7 +9,9 @@ class Hello
 
     void test(int x, int y)
     {
-        return x / y;
+        5 + 5;
+        int b;
+        6 + 6;
     }
     
     int square(int x)

@@ -2,6 +2,7 @@ module CSharpGram where
 
 import ParseLib.Abstract hiding (braced, bracketed, parenthesised)
 import CSharpLex
+import Data.List
 
 
 data Class = Class Token [Member]
@@ -88,6 +89,14 @@ pStat =  StatExpr <$> pExpr <*  sSemi
 pBlock :: Parser Token Stat
 pBlock = StatBlock <$> braced (many pStatDecl)
 
+sortStats x = sortBy f x
+    where f (StatDecl _) (StatDecl _) = EQ
+          f (StatDecl _) _            = LT
+          f _            (StatDecl _) = GT
+          f _            _            = EQ
+
+t1 = "{ 5 + 5; int b; 6 + 6; }"
+t2 (StatBlock x) = x
 
 pMeth :: Parser Token Member
 pMeth = MemberM <$> methRetType <*> sLowerId <*> methArgList <*> pBlock

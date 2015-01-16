@@ -18,12 +18,14 @@ main:
 	RET
 test:
 	LINK 0
-	LDL -3
-	LDL -2
-	DIV
-	STR R3
-	UNLINK
-	RET
+	LDC 5
+	LDC 5
+	ADD
+	AJS -1
+	LDC 6
+	LDC 6
+	ADD
+	AJS -1
 	UNLINK
 	RET
 square:
