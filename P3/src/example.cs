@@ -4,8 +4,7 @@ class Hello
     
     void main()
     {
-        int b;
-        b = 1;
+        square(1);
     }
     
     int square(int x)

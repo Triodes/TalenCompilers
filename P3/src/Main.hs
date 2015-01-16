@@ -14,6 +14,8 @@ import CSharpCode
 start :: Parser s a -> [s] -> a
 start p = fst . head . filter (null . snd) . parse p
 
+lexp p x = start p $ start lexicalScanner x
+
 main :: IO ()
 main = do
          -- get command line arguments
