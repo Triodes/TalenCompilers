@@ -66,7 +66,7 @@ operatorsPrio = [
     ]
 
 pExprCall :: Parser Token Expr
-pExprCall = ExprCall <$> sLowerId <*> parenthesised (many pExpr)
+pExprCall = ExprCall <$> sLowerId <*> parenthesised (listOf pExpr (symbol Comma))
 
 pMember :: Parser Token Member
 pMember =  MemberD <$> pDeclSemi

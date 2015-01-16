@@ -31,7 +31,7 @@ fClas c ms = [Bsr "main", HALT] ++ concat ms
 fMembDecl :: Decl -> Code
 fMembDecl d = []
 
-test = "class Hello { void main() { test() + 5; } }"
+test = "class Hello { void main() { test(1 + 4, 2); } }"
 
 fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
 fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s env ++ [UNLINK] ++ [RET]
@@ -80,9 +80,13 @@ fExprOp :: Token -> SSMExpr -> SSMExpr -> SSMExpr
 fExprOp (Operator "=") e1 e2 va env = e2 Value env ++ [LDS 0] ++ e1 Address env ++ [STA 0]
 fExprOp (Operator op)  e1 e2 va env = e1 Value env ++ e2 Value env ++ [opCodes ! op]
 
-fExprCall :: Token -> [SSMExpr] -> SSMExpr
-fExprCall (LowerId m) ps va env = concatMap (\p -> p Value env) ps ++ [Bsr m] ++ [AJS (-(length ps))] ++ [LDR R3]
+-- as methods are expressions they must leave they're result on the stack. for methods that actually return somesthing
+-- this a value is stored in the RR. For methods that don't return anything we put whatever is in RR on the stack.
+-- This doesn't matter because when the result of an expression isn't needed anymore it is discarded with an AJS -1.
 
+fExprCall :: Token -> [SSMExpr] -> SSMExpr
+fExprCall (LowerId "print") ps va env = concatMap (\p -> p Value env) ps ++ replicate (length ps) (TRAP 0)  ++ [LDR R3]
+fExprCall (LowerId m) ps va env       = concatMap (\p -> p Value env) ps ++ [Bsr m] ++ [AJS (-(length ps))] ++ [LDR R3]
 
 opCodes :: Map String Instr
 opCodes = fromList [ ("+", ADD), ("-", SUB),  ("*", MUL), ("/", DIV), ("%", MOD)

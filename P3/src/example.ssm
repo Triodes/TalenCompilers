@@ -2,16 +2,28 @@
 	HALT
 main:
 	LINK 0
-	Bsr test
-	AJS 0
-	LDR R3
+	LDC 1
+	LDC 2
+	LDC 3
 	LDC 5
 	ADD
+	LDC 0
+	TRAP 0
+	TRAP 0
+	TRAP 0
+	TRAP 0
+	LDR R3
 	AJS -1
 	UNLINK
 	RET
 test:
 	LINK 0
+	LDL -3
+	LDL -2
+	DIV
+	STR R3
+	UNLINK
+	RET
 	UNLINK
 	RET
 square:

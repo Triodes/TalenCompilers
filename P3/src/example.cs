@@ -4,12 +4,12 @@ class Hello
     
     void main()
     {
-        test() + 5;
+        print(1, 2, 3 + 5, 0);
     }
 
-    void test()
+    void test(int x, int y)
     {
-        
+        return x / y;
     }
     
     int square(int x)
