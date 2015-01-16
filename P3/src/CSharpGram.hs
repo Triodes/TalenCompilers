@@ -44,7 +44,24 @@ pExprSimple =  ExprConst <$> sConst
            <|> parenthesised pExpr
 
 pExpr :: Parser Token Expr
-pExpr = chainr pExprSimple (ExprOper <$> sOperator)
+-- pExpr = chainr pExprSimple (ExprOper <$> sOperator)
+pExpr = foldr opLayer pExprSimple operatorsPrio
+
+opLayer :: [Token] -> Parser Token Expr -> Parser Token Expr
+opLayer ops p = chainl p (choice (map f ops))
+    where
+        f op = ExprOper <$> symbol op
+
+operatorsPrio = [
+        [Operator "="], -- Only right associative operator, but has lowest priority, so chainl still yields valid expression trees
+        [Operator "||"],
+        [Operator "&&"],
+        [Operator "^"],
+        [Operator "!=", Operator "=="],
+        [Operator "<", Operator "<=", Operator ">", Operator ">="],
+        [Operator "+", Operator "-"],
+        [Operator "*", Operator "/", Operator "%"]
+    ]
 
 
 pMember :: Parser Token Member
