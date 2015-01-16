@@ -46,6 +46,8 @@ pExprSimple =  ExprConst <$> sConst
 pExpr :: Parser Token Expr
 pExpr = chainr pExprSimple (ExprOper <$> sOperator)
 
+pExprCall :: Parser Token ExprCall
+pExprCall = ExprCall <$> sLowerId <*> parenthesised (many pExpr)
 
 pMember :: Parser Token Member
 pMember =  MemberD <$> pDeclSemi
