@@ -22,6 +22,7 @@ data Stat = StatDecl   Decl
 data Expr = ExprConst  Token
           | ExprVar    Token
           | ExprOper   Token Expr Expr
+          | ExprCall   Token [Expr]
           deriving Show
 
 data Decl = Decl Type Token
@@ -44,7 +45,24 @@ pExprSimple =  ExprConst <$> sConst
            <|> parenthesised pExpr
 
 pExpr :: Parser Token Expr
-pExpr = chainr pExprSimple (ExprOper <$> sOperator)
+-- pExpr = chainr pExprSimple (ExprOper <$> sOperator)
+pExpr = foldr opLayer pExprSimple operatorsPrio
+
+opLayer :: [Token] -> Parser Token Expr -> Parser Token Expr
+opLayer ops p = chainl p (choice (map f ops))
+    where
+        f op = ExprOper <$> symbol op
+
+operatorsPrio = [
+        [Operator "="], -- Only right associative operator, but has lowest priority, so chainl still yields valid expression trees
+        [Operator "||"],
+        [Operator "&&"],
+        [Operator "^"],
+        [Operator "!=", Operator "=="],
+        [Operator "<", Operator "<=", Operator ">", Operator ">="],
+        [Operator "+", Operator "-"],
+        [Operator "*", Operator "/", Operator "%"]
+    ]
 
 pExprCall :: Parser Token ExprCall
 pExprCall = ExprCall <$> sLowerId <*> parenthesised (many pExpr)
