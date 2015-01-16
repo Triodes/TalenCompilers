@@ -32,9 +32,9 @@ fMembDecl :: Decl -> Code
 fMembDecl d = []
 
 fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
-fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s env ++ [RET]
+fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s env ++ [UNLINK] ++ [RET]
     where
-        env = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps))..]
+        env = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..]
        -- makeEnv ps@((Decl t (LowerId n)):xs) i = M.insert n (i - length ps) (makeEnv xs (i + 1))
         --makeEnv []                   i = M.empty
 
@@ -57,7 +57,7 @@ fStatWhile e s1 env = [BRA n] ++ (s1 env) ++ c ++ [BRT (-(n + k + 2))]
         (n, k) = (codeSize (s1 env), codeSize c)
 
 fStatReturn :: SSMExpr -> SSMStat
-fStatReturn e env = e Value env ++ [pop] ++ [RET]
+fStatReturn e env = e Value env ++ [STR R3] ++ [UNLINK] ++ [RET]
 
 fStatBlock :: [SSMStat] -> SSMStat
 fStatBlock ss env = concatMap ($ env) ss
@@ -79,7 +79,7 @@ fExprOp (Operator "=") e1 e2 va env = e2 Value env ++ [LDS 0] ++ e1 Address env 
 fExprOp (Operator op)  e1 e2 va env = e1 Value env ++ e2 Value env ++ [opCodes ! op]
 
 fExprCall :: Token -> [SSMExpr] -> SSMExpr
-fExprCall (LowerId m) ps va env = concatMap (\p -> p Value env) ps ++ [Bsr m]
+fExprCall (LowerId m) ps va env = concatMap (\p -> p Value env) ps ++ [Bsr m] ++ [AJS (-(length ps))] ++ [LDR R3]
 
 
 opCodes :: Map String Instr

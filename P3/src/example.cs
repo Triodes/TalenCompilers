@@ -4,14 +4,19 @@ class Hello
     
     void main()
     {
-        square(1);
+        test();
+    }
+
+    void test()
+    {
+
     }
     
     int square(int x)
     {
         int y;
         y = x * x;
-        return /* this is not x */ y;   
+        return y;   
     }
 
     int abs(int x)
