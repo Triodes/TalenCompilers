@@ -4,12 +4,12 @@ class Hello
     
     void main()
     {
-        test();
+        test() + 5;
     }
 
     void test()
     {
-
+        
     }
     
     int square(int x)

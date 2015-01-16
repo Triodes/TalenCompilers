@@ -5,6 +5,8 @@ main:
 	Bsr test
 	AJS 0
 	LDR R3
+	LDC 5
+	ADD
 	AJS -1
 	UNLINK
 	RET
