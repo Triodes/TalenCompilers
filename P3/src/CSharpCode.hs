@@ -12,12 +12,17 @@ import SSM
 data ValueOrAddress = Value | Address
     deriving Show
 
-codeAlgebra :: CSharpAlgebra Code Code Code (ValueOrAddress -> Code)
+type SSMExpr = (ValueOrAddress -> ParamEnv -> Code)
+type SSMStat = (ParamEnv -> Code)
+
+type ParamEnv = Map String Int
+
+codeAlgebra :: CSharpAlgebra Code Code SSMStat SSMExpr
 codeAlgebra =
     ( fClas
     , (fMembDecl, fMembMeth)
     , (fStatDecl, fStatExpr, fStatIf, fStatWhile, fStatReturn, fStatBlock)
-    , (fExprCon, fExprVar, fExprOp)
+    , (fExprCon, fExprVar, fExprOp, fExprCall)
     )
 
 fClas :: Token -> [Code] -> Code
@@ -26,47 +31,54 @@ fClas c ms = [Bsr "main", HALT] ++ concat ms
 fMembDecl :: Decl -> Code
 fMembDecl d = []
 
-fMembMeth :: Type -> Token -> [Decl] -> Code -> Code
-fMembMeth t (LowerId x) ps s = [LABEL x] ++ s ++ [RET]
+fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
+fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s (makeEnv ps 0) ++ [RET]
+    where 
+        makeEnv ps@((Decl t (LowerId n)):xs) i = M.insert n (i - length ps) (makeEnv xs (i + 1))
+        makeEnv []                   i = M.empty
 
-fStatDecl :: Decl -> Code
-fStatDecl d = []
+fStatDecl :: Decl -> SSMStat
+fStatDecl _d _env = []
 
-fStatExpr :: (ValueOrAddress -> Code) -> Code
-fStatExpr e = e Value ++ [pop]
+fStatExpr :: SSMExpr -> SSMStat
+fStatExpr e env = e Value env ++ [pop]
 
-fStatIf :: (ValueOrAddress -> Code) -> Code -> Code -> Code
-fStatIf e s1 s2 = c ++ [BRF (n1 + 2)] ++ s1 ++ [BRA n2] ++ s2
+fStatIf :: SSMExpr -> SSMStat -> SSMStat -> SSMStat
+fStatIf e s1 s2 env = c ++ [BRF (n1 + 2)] ++ (s1 env) ++ [BRA n2] ++ (s2 env)
     where
-        c        = e Value
-        (n1, n2) = (codeSize s1, codeSize s2)
+        c        = e Value env
+        (n1, n2) = (codeSize (s1 env), codeSize (s2 env))
 
-fStatWhile :: (ValueOrAddress -> Code) -> Code -> Code
-fStatWhile e s1 = [BRA n] ++ s1 ++ c ++ [BRT (-(n + k + 2))]
+fStatWhile :: SSMExpr -> SSMStat -> SSMStat
+fStatWhile e s1 env = [BRA n] ++ (s1 env) ++ c ++ [BRT (-(n + k + 2))]
     where
-        c = e Value
-        (n, k) = (codeSize s1, codeSize c)
+        c = e Value env
+        (n, k) = (codeSize (s1 env), codeSize c)
 
-fStatReturn :: (ValueOrAddress -> Code) -> Code
-fStatReturn e = e Value ++ [pop] ++ [RET]
+fStatReturn :: SSMExpr -> SSMStat
+fStatReturn e env = e Value env ++ [pop] ++ [RET]
 
-fStatBlock :: [Code] -> Code
-fStatBlock = concat
+fStatBlock :: [SSMStat] -> SSMStat
+fStatBlock ss env = concatMap ($ env) ss
 
-fExprCon :: Token -> ValueOrAddress -> Code
-fExprCon c va = case c of
+fExprCon :: Token -> SSMExpr
+fExprCon c va _env = case c of
                     ConstInt  n -> [LDC n]
                     ConstBool b -> [LDC (if b then 1 else 0)]
                     ConstChar c -> [LDC (ord c)]
 
-fExprVar :: Token -> ValueOrAddress -> Code
-fExprVar (LowerId x) va = let loc = 37 in case va of
-                                              Value    ->  [LDL  loc]
-                                              Address  ->  [LDLA loc]
+fExprVar :: Token -> SSMExpr
+fExprVar (LowerId x) va env = case va of
+                                  Value    ->  [LDL  loc]
+                                  Address  ->  [LDLA loc]
+    where loc = if member x env then env ! x else 37
 
-fExprOp :: Token -> (ValueOrAddress -> Code) -> (ValueOrAddress -> Code) -> ValueOrAddress -> Code
-fExprOp (Operator "=") e1 e2 va = e2 Value ++ [LDS 0] ++ e1 Address ++ [STA 0]
-fExprOp (Operator op)  e1 e2 va = e1 Value ++ e2 Value ++ [opCodes ! op]
+fExprOp :: Token -> SSMExpr -> SSMExpr -> SSMExpr
+fExprOp (Operator "=") e1 e2 va env = e2 Value env ++ [LDS 0] ++ e1 Address env ++ [STA 0]
+fExprOp (Operator op)  e1 e2 va env = e1 Value env ++ e2 Value env ++ [opCodes ! op]
+
+fExprCall :: Token -> [SSMExpr] -> SSMExpr
+fExprCall (LowerId m) ps va env = concatMap (\p -> p Value env) ps ++ [Bsr m]
 
 
 opCodes :: Map String Instr

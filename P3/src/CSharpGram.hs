@@ -42,6 +42,7 @@ braced        p = pack (symbol COpen) p (symbol CClose)
 pExprSimple :: Parser Token Expr
 pExprSimple =  ExprConst <$> sConst
            <|> ExprVar   <$> sLowerId
+           <|> pExprCall
            <|> parenthesised pExpr
 
 pExpr :: Parser Token Expr
@@ -64,7 +65,7 @@ operatorsPrio = [
         [Operator "*", Operator "/", Operator "%"]
     ]
 
-pExprCall :: Parser Token ExprCall
+pExprCall :: Parser Token Expr
 pExprCall = ExprCall <$> sLowerId <*> parenthesised (many pExpr)
 
 pMember :: Parser Token Member
