@@ -32,10 +32,11 @@ fMembDecl :: Decl -> Code
 fMembDecl d = []
 
 fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
-fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s (makeEnv ps 0) ++ [RET]
-    where 
-        makeEnv ps@((Decl t (LowerId n)):xs) i = M.insert n (i - length ps) (makeEnv xs (i + 1))
-        makeEnv []                   i = M.empty
+fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s env ++ [RET]
+    where
+        env = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps))..]
+       -- makeEnv ps@((Decl t (LowerId n)):xs) i = M.insert n (i - length ps) (makeEnv xs (i + 1))
+        --makeEnv []                   i = M.empty
 
 fStatDecl :: Decl -> SSMStat
 fStatDecl _d _env = []
