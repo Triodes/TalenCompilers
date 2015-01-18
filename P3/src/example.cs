@@ -4,16 +4,23 @@ class Hello
     
     void main()
     {
-        test();
+        bool bo;
+        bo = true;
     }
 
-    void test()
+    int test(int a)
     {
         int b;
-        b = 5;
-        int y;
-        y = 6;
-        return b + y;
+        if (a == 10)
+        {
+            int c;
+            c = 6;
+            b = 5;
+        }
+        else
+        {
+            b = 9;
+        }
     }
     
     int square(int x)

@@ -51,15 +51,19 @@ fStatExpr :: SSMExpr -> SSMStat
 fStatExpr e env = (e Value env ++ [pop], [])
 
 fStatIf :: SSMExpr -> SSMStat -> SSMStat -> SSMStat
-fStatIf e s1 s2 env = (c ++ [BRF (n1 + 2)] ++ (fst $ s1 env) ++ [BRA n2] ++ (fst $ s2 env), [])
+fStatIf e s1 s2 env = (c ++ [BRF (n1 + 2)] ++ (fst stat1) ++ [BRA n2] ++ (fst stat2), vars)
     where
+        stat1    = s1 env
+        stat2    = s2 env
+        vars     = snd stat1 ++ snd stat2
         c        = e Value env
-        (n1, n2) = (codeSize (fst $ s1 env), codeSize (fst $ s2 env))
+        (n1, n2) = (codeSize (fst stat1), codeSize (fst stat2))
 
 fStatWhile :: SSMExpr -> SSMStat -> SSMStat
-fStatWhile e s1 env = ([BRA n] ++ (fst $ s1 env) ++ c ++ [BRT (-(n + k + 2))], [])
+fStatWhile e s1 env = ([BRA n] ++ (fst stat) ++ c ++ [BRT (-(n + k + 2))], snd stat)
     where
-        c = e Value env
+        stat   = s1 env 
+        c      = e Value env
         (n, k) = (codeSize (fst $ s1 env), codeSize c)
 
 fStatReturn :: SSMExpr -> SSMStat
@@ -72,7 +76,7 @@ fStatBlock ss env = (concat $ fst stats, concat $ snd stats)
 fExprCon :: Token -> SSMExpr
 fExprCon c va _env = case c of
                     ConstInt  n -> [LDC n]
-                    ConstBool b -> [LDC (if b then 1 else 0)]
+                    ConstBool b -> [LDC (if b then -1 else 0)]
                     ConstChar c -> [LDC (ord c)]
 
 fExprVar :: Token -> SSMExpr
