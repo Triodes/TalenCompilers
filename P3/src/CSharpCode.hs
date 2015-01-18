@@ -12,8 +12,9 @@ import SSM
 data ValueOrAddress = Value | Address
     deriving Show
 
+type Vars = [String]
 type SSMExpr = (ValueOrAddress -> ParamEnv -> Code)
-type SSMStat = (ParamEnv -> (Code, [String]))
+type SSMStat = (ParamEnv -> (Code, Vars))
 
 type ParamEnv = Map String Int
 
@@ -31,10 +32,10 @@ fClas c ms = [Bsr "main", HALT] ++ concat ms
 fMembDecl :: Decl -> Code
 fMembDecl d = []
 
-test = "class Hello { void main() { 5 + 5; } }"
+test = "class Hello { void main() { test(); } }"
 
 fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
-fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ (fst stats) ++ [UNLINK] ++ [RET]
+fMembMeth t (LowerId x) ps s = [LABEL x,LINK (size envD)] ++ (fst stats) ++ [UNLINK] ++ [RET]
     where
         stats = s env
         envP  = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..]

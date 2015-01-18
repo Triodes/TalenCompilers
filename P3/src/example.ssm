@@ -2,36 +2,42 @@
 	HALT
 main:
 	LINK 0
-	LDC 5
-	LDC 6
 	Bsr test
-	AJS -2
+	AJS 0
 	LDR R3
 	AJS -1
 	UNLINK
 	RET
 test:
-	LINK 0
+	LINK 2
 	LDC 5
-	LDC 5
-	ADD
+	LDS 0
+	LDLA 1
+	STA 0
 	AJS -1
 	LDC 6
-	LDC 6
-	ADD
+	LDS 0
+	LDLA 2
+	STA 0
 	AJS -1
+	LDL 1
+	LDL 2
+	ADD
+	STR R3
+	UNLINK
+	RET
 	UNLINK
 	RET
 square:
-	LINK 0
+	LINK 1
 	LDL -2
 	LDL -2
 	MUL
 	LDS 0
-	LDLA 37
+	LDLA 1
 	STA 0
 	AJS -1
-	LDL 37
+	LDL 1
 	STR R3
 	UNLINK
 	RET
@@ -58,37 +64,37 @@ abs:
 	UNLINK
 	RET
 fac:
-	LINK 0
+	LINK 2
 	LDC 1
 	LDS 0
-	LDLA 37
+	LDLA 2
 	STA 0
 	AJS -1
 	LDC 1
 	LDS 0
-	LDLA 37
+	LDLA 1
 	STA 0
 	AJS -1
 	BRA 26
-	LDL 37
-	LDL 37
+	LDL 1
+	LDL 2
 	MUL
 	LDS 0
-	LDLA 37
+	LDLA 1
 	STA 0
 	AJS -1
-	LDL 37
+	LDL 2
 	LDC 1
 	ADD
 	LDS 0
-	LDLA 37
+	LDLA 2
 	STA 0
 	AJS -1
-	LDL 37
+	LDL 2
 	LDL -2
 	LE
 	BRT -33
-	LDL 37
+	LDL 1
 	STR R3
 	UNLINK
 	RET

@@ -67,7 +67,7 @@ operatorsPrio = [
     ]
 
 pExprCall :: Parser Token Expr
-pExprCall = ExprCall <$> sLowerId <*> parenthesised (listOf pExpr (symbol Comma))
+pExprCall = ExprCall <$> sLowerId <*> parenthesised (option (listOf pExpr (symbol Comma)) [])
 
 pMember :: Parser Token Member
 pMember =  MemberD <$> pDeclSemi
@@ -95,8 +95,9 @@ sortStats x = sortBy f x
           f _            (StatDecl _) = GT
           f _            _            = EQ
 
-t1 = "{ 5 + 5; int b; 6 + 6; }"
-t2 (StatBlock x) = x
+t1 = "()"
+t2 = "(int a)"
+t3 = "test(int a, int b);"
 
 pMeth :: Parser Token Member
 pMeth = MemberM <$> methRetType <*> sLowerId <*> methArgList <*> pBlock

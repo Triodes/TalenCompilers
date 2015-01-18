@@ -4,14 +4,16 @@ class Hello
     
     void main()
     {
-        test(5, 6);
+        test();
     }
 
-    void test(int x, int y)
+    void test()
     {
-        5 + 5;
         int b;
-        6 + 6;
+        b = 5;
+        int y;
+        y = 6;
+        return b + y;
     }
     
     int square(int x)
