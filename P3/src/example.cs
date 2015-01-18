@@ -4,7 +4,7 @@ class Hello
     
     void main()
     {
-        print(1, 2, 3 + 5, 0);
+        test(5, 6);
     }
 
     void test(int x, int y)

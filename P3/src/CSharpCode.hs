@@ -1,7 +1,7 @@
 module CSharpCode where
 
 import Prelude hiding (LT, GT, EQ)
-import Data.Map as M
+import Data.Map as M hiding (map)
 import Data.Char
 import CSharpLex
 import CSharpGram
@@ -13,7 +13,7 @@ data ValueOrAddress = Value | Address
     deriving Show
 
 type SSMExpr = (ValueOrAddress -> ParamEnv -> Code)
-type SSMStat = (ParamEnv -> Code)
+type SSMStat = (ParamEnv -> (Code, [String]))
 
 type ParamEnv = Map String Int
 
@@ -34,35 +34,39 @@ fMembDecl d = []
 test = "class Hello { void main() { 5 + 5; } }"
 
 fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
-fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ s env ++ [UNLINK] ++ [RET]
+fMembMeth t (LowerId x) ps s = [LABEL x,LINK 0] ++ (fst stats) ++ [UNLINK] ++ [RET]
     where
-        env = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..]
+        stats = s env
+        envP  = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..]
+        envD  = fromList $ zip (snd stats) [1..]
+        env   = union envD envP
        -- makeEnv ps@((Decl t (LowerId n)):xs) i = M.insert n (i - length ps) (makeEnv xs (i + 1))
         --makeEnv []                   i = M.empty
 
 fStatDecl :: Decl -> SSMStat
-fStatDecl _d _env = []
+fStatDecl (Decl _ (LowerId x)) _env = ([], [x])
 
 fStatExpr :: SSMExpr -> SSMStat
-fStatExpr e env = e Value env ++ [pop]
+fStatExpr e env = (e Value env ++ [pop], [])
 
 fStatIf :: SSMExpr -> SSMStat -> SSMStat -> SSMStat
-fStatIf e s1 s2 env = c ++ [BRF (n1 + 2)] ++ (s1 env) ++ [BRA n2] ++ (s2 env)
+fStatIf e s1 s2 env = (c ++ [BRF (n1 + 2)] ++ (fst $ s1 env) ++ [BRA n2] ++ (fst $ s2 env), [])
     where
         c        = e Value env
-        (n1, n2) = (codeSize (s1 env), codeSize (s2 env))
+        (n1, n2) = (codeSize (fst $ s1 env), codeSize (fst $ s2 env))
 
 fStatWhile :: SSMExpr -> SSMStat -> SSMStat
-fStatWhile e s1 env = [BRA n] ++ (s1 env) ++ c ++ [BRT (-(n + k + 2))]
+fStatWhile e s1 env = ([BRA n] ++ (fst $ s1 env) ++ c ++ [BRT (-(n + k + 2))], [])
     where
         c = e Value env
-        (n, k) = (codeSize (s1 env), codeSize c)
+        (n, k) = (codeSize (fst $ s1 env), codeSize c)
 
 fStatReturn :: SSMExpr -> SSMStat
-fStatReturn e env = e Value env ++ [STR R3] ++ [UNLINK] ++ [RET]
+fStatReturn e env = (e Value env ++ [STR R3] ++ [UNLINK] ++ [RET], [])
 
 fStatBlock :: [SSMStat] -> SSMStat
-fStatBlock ss env = concatMap ($ env) ss
+fStatBlock ss env = (concat $ fst stats, concat $ snd stats)
+    where stats = unzip $ map ($ env) ss
 
 fExprCon :: Token -> SSMExpr
 fExprCon c va _env = case c of

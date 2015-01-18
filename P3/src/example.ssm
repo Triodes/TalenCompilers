@@ -2,16 +2,10 @@
 	HALT
 main:
 	LINK 0
-	LDC 1
-	LDC 2
-	LDC 3
 	LDC 5
-	ADD
-	LDC 0
-	TRAP 0
-	TRAP 0
-	TRAP 0
-	TRAP 0
+	LDC 6
+	Bsr test
+	AJS -2
 	LDR R3
 	AJS -1
 	UNLINK
