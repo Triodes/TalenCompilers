@@ -59,7 +59,8 @@ lexIgnore :: Parser Char String
 lexIgnore = concat <$> greedy (lexWhiteSpace <|> lexComments)
 
 lexWhiteSpace :: Parser Char String
-lexWhiteSpace = greedy1 (satisfy isSpace)
+lexWhiteSpace = f <$> satisfy isSpace
+    where f x = x : []
 
 lexComments :: Parser Char String
 lexComments = token "//" *> many anyNoEol <* eol

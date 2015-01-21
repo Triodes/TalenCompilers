@@ -2,6 +2,7 @@ module CSharpCode where
 
 import Prelude hiding (LT, GT, EQ)
 import Data.Map as M hiding (map)
+import Data.List hiding (union)
 import Data.Char
 import CSharpLex
 import CSharpGram
@@ -13,10 +14,12 @@ data ValueOrAddress = Value | Address
     deriving Show
 
 type Vars = [String]
-type SSMExpr = (ValueOrAddress -> ParamEnv -> Code)
-type SSMStat = (ParamEnv -> (Code, Vars))
+type SSMExpr = (ValueOrAddress -> FinalEnv -> Code)
+type SSMStat = (FinalEnv -> (Code, Vars))
 
-type ParamEnv = Map String Int
+type LocalEnv  = Map String Int
+type GlobalEnv = Map String Int
+type FinalEnv  = (LocalEnv, GlobalEnv)
 
 codeAlgebra :: CSharpAlgebra Code Code SSMStat SSMExpr
 codeAlgebra =
@@ -27,7 +30,7 @@ codeAlgebra =
     )
 
 fClas :: Token -> [Code] -> Code
-fClas c ms = [Bsr "main", HALT] ++ concat ms
+fClas c ms = [LDRR R4 SP,Bsr "main", HALT] ++ concat ms
 
 fMembDecl :: Decl -> Code
 fMembDecl d = []
@@ -39,8 +42,8 @@ fMembMeth t (LowerId x) ps s = [LABEL x,LINK (size envD)] ++ (fst stats) ++ [UNL
     where
         stats = s env
         envP  = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..]
-        envD  = fromList $ zip (snd stats) [1..]
-        env   = union envD envP
+        envD  = fromList $ zip (nub $ snd stats) [1..]
+        env   = (union envD envP, M.empty)
        -- makeEnv ps@((Decl t (LowerId n)):xs) i = M.insert n (i - length ps) (makeEnv xs (i + 1))
         --makeEnv []                   i = M.empty
 
@@ -83,7 +86,9 @@ fExprVar :: Token -> SSMExpr
 fExprVar (LowerId x) va env = case va of
                                   Value    ->  [LDL  loc]
                                   Address  ->  [LDLA loc]
-    where loc = if member x env then env ! x else 37
+    where lEnv = fst env
+          gEnv = snd env
+          loc  = if member x (lEnv) then lEnv ! x else if member x (gEnv) then lEnv ! x else 37
 
 fExprOp :: Token -> SSMExpr -> SSMExpr -> SSMExpr
 fExprOp (Operator "=") e1 e2 va env = e2 Value env ++ [LDS 0] ++ e1 Address env ++ [STA 0]

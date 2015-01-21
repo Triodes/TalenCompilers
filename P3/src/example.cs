@@ -4,22 +4,27 @@ class Hello
     
     void main()
     {
-        bool bo;
-        bo = true;
+        test(10);
     }
 
     int test(int a)
     {
-        int b;
         if (a == 10)
         {
             int c;
             c = 6;
-            b = 5;
         }
         else
         {
-            b = 9;
+        }
+
+        if (a == 5)
+        {
+            int c;
+            c = 8;
+        }
+        else
+        {
         }
     }
     

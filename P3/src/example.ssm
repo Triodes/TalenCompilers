@@ -1,36 +1,37 @@
+	LDRR R4 SP
 	Bsr main
 	HALT
 main:
-	LINK 1
-	LDC -1
-	LDS 0
-	LDLA 1
-	STA 0
+	LINK 0
+	LDC 10
+	Bsr test
+	AJS -1
+	LDR R3
 	AJS -1
 	UNLINK
 	RET
 test:
-	LINK 2
+	LINK 1
 	LDL -2
 	LDC 10
 	EQ
-	BRF 22
+	BRF 12
 	LDC 6
 	LDS 0
-	LDLA 2
+	LDLA 1
 	STA 0
 	AJS -1
+	BRA 0
+	LDL -2
 	LDC 5
+	EQ
+	BRF 12
+	LDC 8
 	LDS 0
 	LDLA 1
 	STA 0
 	AJS -1
-	BRA 10
-	LDC 9
-	LDS 0
-	LDLA 1
-	STA 0
-	AJS -1
+	BRA 0
 	UNLINK
 	RET
 square:
