@@ -4,12 +4,14 @@ class Hello
     
     void main()
     {
-        test(10);
+        test(true);
     }
 
-    int test(int a)
+    int test(bool a)
     {
-        if (a == 10)
+        int g;
+        h = 32;
+        if (a == true)
         {
             int c;
             c = 6;
