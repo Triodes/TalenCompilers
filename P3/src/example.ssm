@@ -1,4 +1,6 @@
+	AJS 1
 	LDRR R4 SP
+	AJS 1
 	Bsr main
 	HALT
 main:

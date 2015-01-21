@@ -16,12 +16,13 @@ data ValueOrAddress = Value | Address
 type Vars = [String]
 type SSMExpr = (ValueOrAddress -> FinalEnv -> Code)
 type SSMStat = (FinalEnv -> (Code, Vars))
+type SSMMemb = (GlobalEnv -> (Code, Vars))
 
 type LocalEnv  = Map String Int
 type GlobalEnv = Map String Int
 type FinalEnv  = (LocalEnv, GlobalEnv)
 
-codeAlgebra :: CSharpAlgebra Code Code SSMStat SSMExpr
+codeAlgebra :: CSharpAlgebra Code SSMMemb SSMStat SSMExpr
 codeAlgebra =
     ( fClas
     , (fMembDecl, fMembMeth)
@@ -29,21 +30,23 @@ codeAlgebra =
     , (fExprCon, fExprVar, fExprOp, fExprCall)
     )
 
-fClas :: Token -> [Code] -> Code
-fClas c ms = [LDRR R4 SP,Bsr "main", HALT] ++ concat ms
+fClas :: Token -> [SSMMemb] -> Code
+fClas c ms = [AJS 1, LDRR R4 SP, AJS (size env), Bsr "main", HALT] ++ (concat $ fst membs)
+    where membs = unzip $ map ($ env) ms
+          env   = fromList $ zip (nub $ concat $ snd membs) [1..]
 
-fMembDecl :: Decl -> Code
-fMembDecl d = []
+fMembDecl :: Decl -> SSMMemb
+fMembDecl (Decl _ (LowerId x)) _env = ([], [x])
 
 test = "class Hello { void main() { test(); } }"
 
-fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> Code
-fMembMeth t (LowerId x) ps s = [LABEL x,LINK (size envD)] ++ (fst stats) ++ [UNLINK] ++ [RET]
+fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> SSMMemb
+fMembMeth t (LowerId x) ps s gEnv = ([LABEL x,LINK (size envD)] ++ (fst stats) ++ [UNLINK] ++ [RET], [])
     where
         stats = s env
         envP  = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..]
         envD  = fromList $ zip (nub $ snd stats) [1..]
-        env   = (union envD envP, M.empty)
+        env   = (union envD envP, gEnv)
        -- makeEnv ps@((Decl t (LowerId n)):xs) i = M.insert n (i - length ps) (makeEnv xs (i + 1))
         --makeEnv []                   i = M.empty
 
@@ -84,11 +87,13 @@ fExprCon c va _env = case c of
 
 fExprVar :: Token -> SSMExpr
 fExprVar (LowerId x) va env = case va of
-                                  Value    ->  [LDL  loc]
-                                  Address  ->  [LDLA loc]
-    where lEnv = fst env
-          gEnv = snd env
-          loc  = if member x (lEnv) then lEnv ! x else if member x (gEnv) then lEnv ! x else 37
+                                  Value    ->  if local then [LDL offset]  else [LDR R4, LDA offset]
+                                  Address  ->  if local then [LDLA offset] else [LDR R4, LDAA offset]
+    where lEnv   = fst env
+          gEnv   = snd env
+          local  = member x (lEnv)
+          global = member x (gEnv)
+          offset = if local then lEnv ! x else if global then gEnv ! x else 0
 
 fExprOp :: Token -> SSMExpr -> SSMExpr -> SSMExpr
 fExprOp (Operator "=") e1 e2 va env = e2 Value env ++ [LDS 0] ++ e1 Address env ++ [STA 0]
