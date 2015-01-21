@@ -5,28 +5,23 @@
 	HALT
 main:
 	LINK 0
-	LDC -1
-	Bsr test
-	AJS -1
+	LDC 1
+	LDC 2
+	ADD
+	TRAP 0
 	LDR R3
 	AJS -1
 	UNLINK
 	RET
 test:
-	LINK 2
-	LDC 32
-	LDS 0
-	LDR R4
-	LDAA 0
-	STA 0
-	AJS -1
+	LINK 1
 	LDL -2
 	LDC -1
 	EQ
 	BRF 12
 	LDC 6
 	LDS 0
-	LDLA 2
+	LDLA 1
 	STA 0
 	AJS -1
 	BRA 0
@@ -36,7 +31,7 @@ test:
 	BRF 12
 	LDC 8
 	LDS 0
-	LDLA 2
+	LDLA 1
 	STA 0
 	AJS -1
 	BRA 0

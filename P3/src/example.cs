@@ -4,13 +4,11 @@ class Hello
     
     void main()
     {
-        test(true);
+        print(1+2);
     }
 
     int test(bool a)
     {
-        int g;
-        h = 32;
         if (a == true)
         {
             int c;
