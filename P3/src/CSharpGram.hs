@@ -96,7 +96,7 @@ pStat =  StatExpr <$> pExpr <*  sSemi
 pBlock :: Parser Token Stat
 pBlock = StatBlock <$> braced (many pStatDecl)
 
-sortStats x = sortBy f x
+sortStats = sortBy f
     where f (StatDecl _) (StatDecl _) = EQ
           f (StatDecl _) _            = LT
           f _            (StatDecl _) = GT
