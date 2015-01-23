@@ -50,6 +50,7 @@ pExprSimple =  ExprConst <$> sConst
 pExpr :: Parser Token Expr
 pExpr = postExpr <$> foldr opLayer pExprSimple operatorsPrio
 
+-- post processes expressions to unfold combined assignment operators.
 postExpr :: Expr -> Expr
 postExpr exp@(ExprOper op@(Operator str) left right) = if notElem op combinedOps 
                                                          then exp
@@ -68,6 +69,7 @@ opLayer ops p = chainl p (choice (map f ops))
        
    Sorted by operator priority, low to high (for use with foldr)
 -}
+
 combinedOps = [
       Operator "+=",
       Operator "-=",
@@ -78,7 +80,7 @@ combinedOps = [
   ]
 
 operatorsPrio = [
-        [Operator "="] ++ combinedOps, -- Only right associative operators, but have lowest priority, so chainl still yields valid expression trees
+        [Operator "="] ++ combinedOps,
         [Operator "||"],
         [Operator "&&"],
         [Operator "^"],
