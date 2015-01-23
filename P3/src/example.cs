@@ -4,7 +4,8 @@ class Hello
     
     void main()
     {
-        print(1+2);
+        g = 5;
+        g *= 10;
     }
 
     int test(bool a)

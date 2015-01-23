@@ -4,6 +4,7 @@ import Prelude hiding (LT, GT, EQ)
 import Data.Map as M hiding (map)
 import Data.List hiding (union)
 import Data.Char
+import Control.Arrow
 import CSharpLex
 import CSharpGram
 import CSharpAlgebra
@@ -44,7 +45,7 @@ codeAlgebra =
 -- LDRR R4: create a pointer to the global var space.
 -- AJS (size env): reserve space for global vars.
 fClas :: Token -> [SSMMemb] -> Code
-fClas c ms = [AJS 1, LDRR R4 SP, AJS (size env), Bsr "main", HALT] ++ (concat $ fst membs)
+fClas c ms = [AJS 1, LDRR R4 SP, AJS (size env), Bsr "main", HALT] ++ concat (fst membs)
     where membs = unzip $ map ($ env) ms -- Unzip the tuples returned by ms
           env   = fromList $ zip (nub $ concat $ snd membs) [1..] -- turn the lists of vars in an environment
 
@@ -54,7 +55,7 @@ fMembDecl (Decl _ (LowerId x)) _env = ([], [x])
 
 -- Constructs method entrance and exit, reserves space for local vars with LINK (size envD)
 fMembMeth :: Type -> Token -> [Decl] -> SSMStat -> SSMMemb
-fMembMeth t (LowerId x) ps s gEnv = ([LABEL x,LINK (size envD)] ++ (fst stats) ++ [UNLINK] ++ [RET], [])
+fMembMeth t (LowerId x) ps s gEnv = ([LABEL x,LINK (size envD)] ++ fst stats ++ [UNLINK] ++ [RET], [])
     where
         stats = s env
         envP  = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..] -- construct env with params
@@ -71,7 +72,7 @@ fStatExpr e env = (e Value env ++ [pop], [])
 
 -- evaluates an if statement
 fStatIf :: SSMExpr -> SSMStat -> SSMStat -> SSMStat
-fStatIf e s1 s2 env = (c ++ [BRF (n1 + 2)] ++ (fst stat1) ++ [BRA n2] ++ (fst stat2), vars)
+fStatIf e s1 s2 env = (c ++ [BRF (n1 + 2)] ++ fst stat1 ++ [BRA n2] ++ fst stat2, vars)
     where -- calculates the size of the then and else blocks. Get the vars given by decls in those blocks.
         stat1    = s1 env
         stat2    = s2 env
@@ -81,7 +82,7 @@ fStatIf e s1 s2 env = (c ++ [BRF (n1 + 2)] ++ (fst stat1) ++ [BRA n2] ++ (fst st
 
 -- evaluates a while statement
 fStatWhile :: SSMExpr -> SSMStat -> SSMStat
-fStatWhile e s1 env = ([BRA n] ++ (fst stat) ++ c ++ [BRT (-(n + k + 2))], snd stat)
+fStatWhile e s1 env = ([BRA n] ++ fst stat ++ c ++ [BRT (-(n + k + 2))], snd stat)
     where -- calculates the size of the while block. Get the vars given by decls in this block.
         stat   = s1 env 
         c      = e Value env
@@ -93,7 +94,7 @@ fStatReturn e env = (e Value env ++ [STR R3] ++ [UNLINK] ++ [RET], [])
 
 -- evaluates a block of statements
 fStatBlock :: [SSMStat] -> SSMStat
-fStatBlock ss env = (concat $ fst stats, concat $ snd stats)
+fStatBlock ss env = (concat *** concat) stats
     where stats = unzip $ map ($ env) ss
 
 -- evaluates constants
@@ -110,9 +111,12 @@ fExprVar (LowerId x) va env = case va of
                                   Address  ->  if local then [LDLA offset] else [LDR R4, LDAA offset]
     where lEnv   = fst env
           gEnv   = snd env
-          local  = member x (lEnv)
-          global = member x (gEnv)
-          offset = if local then lEnv ! x else if global then gEnv ! x else 0 -- zero points to the dummy space created by fClass
+          local  = member x lEnv
+          global = member x gEnv
+          offset 
+            | local     = lEnv ! x 
+            | global    = gEnv ! x 
+            | otherwise = 0       -- zero points to the dummy space created by fClass
 
 -- evaluates operators
 fExprOp :: Token -> SSMExpr -> SSMExpr -> SSMExpr

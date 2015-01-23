@@ -5,11 +5,20 @@
 	HALT
 main:
 	LINK 0
-	LDC 1
-	LDC 2
-	ADD
-	TRAP 0
-	LDR R3
+	LDC 5
+	LDS 0
+	LDR R4
+	LDAA 1
+	STA 0
+	AJS -1
+	LDR R4
+	LDA 1
+	LDC 10
+	MUL
+	LDS 0
+	LDR R4
+	LDAA 1
+	STA 0
 	AJS -1
 	UNLINK
 	RET

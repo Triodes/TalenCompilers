@@ -48,7 +48,15 @@ pExprSimple =  ExprConst <$> sConst
 
 -- Takes 'layers' of operators (sorted by priority) and builds a left associative expression tree
 pExpr :: Parser Token Expr
-pExpr = foldr opLayer pExprSimple operatorsPrio
+pExpr = postExpr <$> foldr opLayer pExprSimple operatorsPrio
+
+-- post processes expressions to unfold combined assignment operators.
+postExpr :: Expr -> Expr
+postExpr exp@(ExprOper op@(Operator str) left right) = if notElem op combinedOps 
+                                                         then exp
+                                                         else ExprOper asOp left (ExprOper (Operator [head str]) left right)
+                                                         where asOp = Operator "="
+postExpr x = x
 
 opLayer :: [Token] -> Parser Token Expr -> Parser Token Expr
 opLayer ops p = chainl p (choice (map f ops))
@@ -61,8 +69,18 @@ opLayer ops p = chainl p (choice (map f ops))
        
    Sorted by operator priority, low to high (for use with foldr)
 -}
+
+combinedOps = [
+      Operator "+=",
+      Operator "-=",
+      Operator "/=",
+      Operator "*=",
+      Operator "%=",
+      Operator "^="
+  ]
+
 operatorsPrio = [
-        [Operator "="],
+        [Operator "="] ++ combinedOps,
         [Operator "||"],
         [Operator "&&"],
         [Operator "^"],
