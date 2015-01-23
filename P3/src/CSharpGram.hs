@@ -48,15 +48,31 @@ pExprSimple =  ExprConst <$> sConst
 
 pExpr :: Parser Token Expr
 -- pExpr = chainr pExprSimple (ExprOper <$> sOperator)
-pExpr = foldr opLayer pExprSimple operatorsPrio
+pExpr = postExpr <$> foldr opLayer pExprSimple operatorsPrio
+
+postExpr :: Expr -> Expr
+postExpr exp@(ExprOper op@(Operator str) left right) = if notElem op combinedOps 
+                                                         then exp
+                                                         else ExprOper asOp left (ExprOper (Operator [head str]) left right)
+                                                         where asOp = Operator "="
+postExpr x = x
 
 opLayer :: [Token] -> Parser Token Expr -> Parser Token Expr
 opLayer ops p = chainl p (choice (map f ops))
     where
         f op = ExprOper <$> symbol op
 
+combinedOps = [
+      Operator "+=",
+      Operator "-=",
+      Operator "/=",
+      Operator "*=",
+      Operator "%=",
+      Operator "^="
+  ]
+
 operatorsPrio = [
-        [Operator "="], -- Only right associative operator, but has lowest priority, so chainl still yields valid expression trees
+        [Operator "="] ++ combinedOps, -- Only right associative operators, but have lowest priority, so chainl still yields valid expression trees
         [Operator "||"],
         [Operator "&&"],
         [Operator "^"],
