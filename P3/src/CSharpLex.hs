@@ -62,6 +62,8 @@ lexWhiteSpace :: Parser Char String
 lexWhiteSpace = f <$> satisfy isSpace
     where f x = [x]
 
+-- Parses the two types of comments:
+-- Single line ('// ...') and multiline ('/* ... */')
 lexComments :: Parser Char String
 lexComments = token "//" *> many anyNoEol <* eol
     <|> token "/*" *> many anySymbol <* token "*/"
@@ -81,9 +83,11 @@ lexUpperId = (\x xs -> UpperId (x:xs)) <$> satisfy isUpper <*> greedy (satisfy i
 lexConstInt :: Parser Char Token
 lexConstInt = (ConstInt . read) <$> greedy1 (satisfy isDigit)
 
+-- Can also use the read function, but Haskell uses capitalized booleans
 lexConstBool :: Parser Char Token
 lexConstBool = (ConstBool . read . \(x:xs) -> toUpper x : xs) <$> (token "true" <|> token "false")
 
+-- Take any single symbol between single quotes
 lexConstChar :: Parser Char Token
 lexConstChar = ConstChar <$> pack (symbol '\'') anySymbol (symbol '\'')
 
@@ -113,6 +117,7 @@ lexToken = greedyChoice
              , lexUpperId
              ]
 
+-- Now uses lexIgnore to also discard comments
 lexicalScanner :: Parser Char [Token]
 lexicalScanner = lexIgnore *> greedy (lexToken <* lexIgnore) <* eof
 
