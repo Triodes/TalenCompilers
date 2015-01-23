@@ -46,8 +46,8 @@ pExprSimple =  ExprConst <$> sConst
            <|> pExprCall
            <|> parenthesised pExpr
 
+-- Takes 'layers' of operators (sorted by priority) and builds a left associative expression tree
 pExpr :: Parser Token Expr
--- pExpr = chainr pExprSimple (ExprOper <$> sOperator)
 pExpr = foldr opLayer pExprSimple operatorsPrio
 
 opLayer :: [Token] -> Parser Token Expr -> Parser Token Expr
@@ -55,8 +55,14 @@ opLayer ops p = chainl p (choice (map f ops))
     where
         f op = ExprOper <$> symbol op
 
+{-
+   Left associative operators, except for assignment
+   Assignment has lowest priority, so chainl still yields valid expression trees
+       
+   Sorted by operator priority, low to high (for use with foldr)
+-}
 operatorsPrio = [
-        [Operator "="], -- Only right associative operator, but has lowest priority, so chainl still yields valid expression trees
+        [Operator "="],
         [Operator "||"],
         [Operator "&&"],
         [Operator "^"],
@@ -66,6 +72,7 @@ operatorsPrio = [
         [Operator "*", Operator "/", Operator "%"]
     ]
 
+-- Parses method calls as expression (including any expressions as method arguments)
 pExprCall :: Parser Token Expr
 pExprCall = ExprCall <$> sLowerId <*> parenthesised (option (listOf pExpr (symbol Comma)) [])
 
