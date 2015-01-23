@@ -1,6 +1,15 @@
 Aron List, 3896536
 Jelle Hol, 3760685
 
+Task 1
+- Added appropriate token types (ConstBool, ConstChar)
+- Added matching lexer functions based on lexConstInt
+- Added matching SSM instructions to generator function fExprCon
+
+Task 2
+- Extended the pExpr function with a foldr over a list of lists of operators sorted by priority (inspired by the lecture notes)
+- The fold function opLayer uses chainl to create an operator parser tree with the right precedence
+
 Task 3
 From the list of parameter declarations we constructed an envirionment mapping variable names to offsets from the mark pointer. We set the mark pointer to the begin of the method with link. We added an ExprCall to the grammar and an apropriate parser. We modified the fold functions in CSharpCode.hs to cope with an environment.
 
@@ -12,6 +21,11 @@ As the return functions allready put the value of the expression after the retur
 
 Task 6
 Changed the return type of statements and expressions to a tuple of code and list of declared variables. in fMembMeth we construct a local env from the param env and the env with the local vars.
+
+Task 7
+- Added comment lexer lexComments
+- Combined lexComments and lexWhiteSpace into lexIgnore
+- Replaced lexWhiteSpace with lexIgnore in lexicalScanner
 
 Task 8
 added a post-processing function that transforms expressions with a compuund assignment to the fully unfolded ones. i.e. x += 5 becomes x = x + 5 in the expression tree.
