@@ -60,7 +60,7 @@ lexIgnore = concat <$> greedy (lexWhiteSpace <|> lexComments)
 
 lexWhiteSpace :: Parser Char String
 lexWhiteSpace = f <$> satisfy isSpace
-    where f x = x : []
+    where f x = [x]
 
 -- Parses the two types of comments:
 -- Single line ('// ...') and multiline ('/* ... */')
